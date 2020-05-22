@@ -7,7 +7,7 @@ import numpy as np
 apple_movetime = []
 apple_obj = []
 apple_rect = []
-filename_apple = "akihirojin.png"
+filename_apple = "apple.png"
 
 def obj_init(n_apple):
     for i in range(n_apple):
