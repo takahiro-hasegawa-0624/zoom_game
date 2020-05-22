@@ -4,3 +4,4 @@
 - dlib
 - imutils
 - pygame
+- numpy
