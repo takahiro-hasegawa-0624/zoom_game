@@ -1,6 +1,6 @@
 # zoom_game
 
-## what needs to be installed
+## what needs to be installed(python module)
 - dlib
 - imutils
 - pygame
