@@ -1,9 +1,9 @@
 import numpy as np
 import cv2
 import os
-face_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_frontalface_default.xml'
-eye_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_eye.xml'
-mouth_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_mcs_mouth.xml'
+face_cascade_path = "data/haar_face.xml";
+eye_cascade_path = "data/haar_eye.xml";
+mouth_cascade_path = "data/haar_mouth.xml";
 face_cascade = cv2.CascadeClassifier(face_cascade_path)
 eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 mouth_cascade = cv2.CascadeClassifier(mouth_cascade_path)
@@ -37,7 +37,7 @@ def main():
     Player.containers = all
     Beam.containers = all, beams
     Alien.containers = all, aliens
-    Back_image = load_image("/Users/81903/Downloads/data/Aichi.png ")
+    Back_image = load_image("../images/bg.png ")
     back_rect = Back_image.get_rect()
     ret, frame = camera.read()
     screen.fill([0,0,0])
@@ -69,11 +69,11 @@ def main():
     #faces = faces.swapaxes(0,1)
     #faces = pygame.surfarray.make_surface(faces)
     Player.image = frame
-    Alien.images = split_image(load_image("Hamburger.png"), 2)
-    Beam.image = load_image("taitai.png")
-    Taitai=cv2.imread("/Users/81903/Downloads/data/tai.jpg")
-    kao=cv2.imread("/Users/81903/Downloads/data/face.png")
-    Taitai =cv2.resize(Taitai,(240,320))
+    Alien.images = split_image(load_image("../images/hamburger.png"), 2)
+    Beam.image = load_image("../images/bullet.png")
+    Taitai=cv2.imread("../imgaes/owl.jpg")
+    kao=cv2.imread("../images/face.png")
+    Taitai = cv2.resize(Taitai,(240,320))
     player = Player()
     Alien((50,30))
     clock = pygame.time.Clock()

@@ -7,7 +7,7 @@ import numpy as np
 apple_movetime = []
 apple_obj = []
 apple_rect = []
-filename_apple = "apple.png"
+filename_apple = "../images/apple.png"
 
 def obj_init(n_apple):
     for i in range(n_apple):
@@ -35,7 +35,7 @@ def main():
     screen.fill((255,255,255))
 
     pygame.display.set_caption("Test")                        # タイトルバーに表示する文字
-    bg = pygame.image.load("bg.png").convert()    
+    bg = pygame.image.load("../images/bg.png").convert()    
     rect_bg = bg.get_rect()
     font = pygame.font.Font(None, 55)
     
