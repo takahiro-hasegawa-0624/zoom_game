@@ -5,3 +5,4 @@
 - imutils
 - pygame
 - numpy
+- opencv-python
