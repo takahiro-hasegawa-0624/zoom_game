@@ -2,6 +2,7 @@
 # リンゴと敵を動かすプログラム
 # 作成者: 椎名
 # ああ
+# 142857
 
 import pygame
 from pygame.locals import *
