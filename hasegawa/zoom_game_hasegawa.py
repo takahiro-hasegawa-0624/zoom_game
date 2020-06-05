@@ -1,5 +1,4 @@
 # basic
-import matplotlib.pyplot as plt
 import numpy as np
 
 # face recognition
@@ -8,7 +7,7 @@ from imutils import face_utils
 import cv2
 
 face_detector = dlib.get_frontal_face_detector()
-predictor_path = 'shape_predictor_68_face_landmarks.dat'
+predictor_path = '/Users/takahiro/Downloads/shape_predictor_68_face_landmarks.dat'
 face_predictor = dlib.shape_predictor(predictor_path)
 
 # https://qiita.com/mamon/items/bb2334eef596f8cacd9b
@@ -43,7 +42,7 @@ def face_detect_trim(img):
 
 def capture_trim():
     # カメラ画像の表示 ('q'入力で終了)
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(0)
     while(True):
         ret, img = cap.read()
         #img = cv2.resize(img , (int(img.shape[1]), int(img.shape[0])))
@@ -64,3 +63,6 @@ def capture_trim():
     cap.release()
     cv2.destroyAllWindows()
     return None
+
+if __name__ == "__main__":
+    capture_trim()
