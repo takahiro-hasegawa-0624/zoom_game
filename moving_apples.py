@@ -5,19 +5,19 @@ import sys
 import numpy as np
 import math
 
-screenheight = 400
-screenwidth = 400
-SCREEN = Rect(0, 0, screenheight, screenwidth)   # 画面サイズ
-n_apple = 10   #リンゴの数
-n_enemy = 10   #敵の数
+screenheight = 720
+screenwidth = 1440
+SCREEN = Rect(0, 0, screenwidth, screenheight)   # 画面サイズ
+n_apple = 5   #リンゴの数
+n_enemy = 5   #敵の数
 gameduration = 20000    #ゲームの所要時間(ms)
-appleduration_min = 5000   
-appleduration_max = 10000
-v_apple = 2
+appleduration_min = 20000   
+appleduration_max = 21000
+v_apple = 20   #リンゴの速さ(pixel / frame)
 
-enemyduration_min = 5000   
-enemyduration_max = 10000
-v_enemy = 10
+enemyduration_min = 20000   
+enemyduration_max = 21000
+v_enemy = 40   #敵の速さ(pixel / frame)
 
 # スプライトのクラス
 class Sprite(pygame.sprite.Sprite):
@@ -64,13 +64,29 @@ def main():
 
     # スプライト(リンゴ)の追加
     for _ in range(n_apple):
-        #初期位置
-        x_init = np.random.randint(0,screenheight)
-        y_init = np.random.randint(0,screenwidth)
+        #出現方向
+        appeardirection = np.random.choice(['l','r','u','d'])
+
         #初速
-        theta = np.random.random_sample() * 2 * math.pi
+        theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * math.pi
         vx_init = v_apple * math.cos(theta)
         vy_init = v_apple * math.sin(theta)
+        if appeardirection =='u':
+            x_init = np.random.randint(0,screenwidth)
+            y_init = 0
+        elif appeardirection == 'd':
+            x_init = np.random.randint(0,screenwidth)
+            y_init = screenheight
+            vy_init = -vy_init
+        elif appeardirection == 'l':
+            x_init = 0
+            y_init = np.random.randint(0,screenheight)
+            vx_init,vy_init = vy_init,vx_init
+        else:
+            x_init = screenwidth
+            y_init = np.random.randint(0,screenheight)
+            vx_init,vy_init = -vy_init,vx_init
+
         #出現時刻
         appeartime = np.random.randint(2000,gameduration)
         #消滅時刻　　　　
@@ -80,13 +96,29 @@ def main():
 
     # スプライト(敵)の追加
     for _ in range(n_enemy):
-        #初期位置
-        x_init = np.random.randint(0,screenheight)
-        y_init = np.random.randint(0,screenwidth)
+        #出現方向
+        appeardirection = np.random.choice(['l','r','u','d'])
+
         #初速
-        theta = np.random.random_sample() * 2 * math.pi
-        vx_init = v_enemy * math.cos(theta)
-        vy_init = v_enemy * math.sin(theta)
+        theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * math.pi
+        vx_init = v_apple * math.cos(theta)
+        vy_init = v_apple * math.sin(theta)
+        if appeardirection =='u':
+            x_init = np.random.randint(0,screenwidth)
+            y_init = 0
+        elif appeardirection == 'd':
+            x_init = np.random.randint(0,screenwidth)
+            y_init = screenheight
+            vy_init = -vy_init
+        elif appeardirection == 'l':
+            x_init = 0
+            y_init = np.random.randint(0,screenheight)
+            vx_init,vy_init = vy_init,vx_init
+        else:
+            x_init = screenwidth
+            y_init = np.random.randint(0,screenheight)
+            vx_init,vy_init = -vy_init,vx_init
+
         #出現時刻
         appeartime = np.random.randint(2000,gameduration)
         #消滅時刻　　　　
@@ -129,6 +161,9 @@ def main():
         # イベント処理
         for event in pygame.event.get():
             # 終了用のイベント処理
+            if time > gameduration + 10000:
+                pygame.quit()
+                sys.exit()
             if event.type == QUIT:          # 閉じるボタンが押されたとき
                 pygame.quit()
                 sys.exit()
