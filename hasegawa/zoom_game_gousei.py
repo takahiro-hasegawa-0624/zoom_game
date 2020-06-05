@@ -1,15 +1,84 @@
+# basic
 import numpy as np
+
+# face recognition
+import dlib
+from imutils import face_utils
 import cv2
-import os
-face_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_frontalface_default.xml'
-eye_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_eye.xml'
-mouth_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_mcs_mouth.xml'
+
+face_detector = dlib.get_frontal_face_detector()
+predictor_path = '/Users/tanakaakira/zoom_game-hasegawa/hasegawa/shape_predictor_68_face_landmarks.dat'
+face_predictor = dlib.shape_predictor(predictor_path)
+
+# https://qiita.com/mamon/items/bb2334eef596f8cacd9b
+# https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
+def face_detect_trim(img):
+    # 顔検出
+    img_gry = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    faces = face_detector(img_gry, 1)
+
+    pos = [0,0,0,0]
+    landmark = [[]]
+    # 検出した全顔に対して処理
+    for face in faces:
+        # 顔のランドマーク検出
+        landmark = face_predictor(img_gry, face)
+        # 処理高速化のためランドマーク群をNumPy配列に変換(必須)
+        landmark = face_utils.shape_to_np(landmark)[60:68]
+
+        img = img[face.top():face.bottom(), face.left():face.right()]
+        #cv2.rectangle(img, tuple([face.left(),face.top()]), tuple([face.right(),face.bottom()]), (0, 0,255), thickness=2)
+        
+        landmark[:,0] -= face.left()
+        landmark[:,1] -= face.top()
+        pos.append([face.top(),face.bottom(),face.left(),face.right()])
+        # ランドマーク描画
+        for (x, y) in landmark:
+            cv2.circle(img, (x, y), 3, (0, 0, 255), -1)
+
+        break
+
+    return img, pos, landmark
+
+def capture_trim():
+    # カメラ画像の表示 ('q'入力で終了)
+    cap = cv2.VideoCapture(0)
+    while(True):
+        ret, img = cap.read()
+        #img = cv2.resize(img , (int(img.shape[1]), int(img.shape[0])))
+
+        # 顔のランドマーク検出(2.の関数呼び出し)
+        img,_,_ = face_detect_trim(img)
+        #img = face_recog(img)
+
+        # 結果の表示
+        cv2.imshow('img', cv2.resize(img , (int(img.shape[1]*2), int(img.shape[0]*2))))
+        #cv2.imshow('img', img)
+
+        # 'q'が入力されるまでループ
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # 後処理
+    cap.release()
+    cv2.destroyAllWindows()
+    return None
+
+#if __name__ == "__main__":
+    #capture_trim()
+
+#face_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_frontalface_default.xml'
+#eye_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_eye.xml'
+#mouth_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_mcs_mouth.xml'
+face_cascade_path = r'/Users/tanakaakira/zoomgame/haarcascade_frontalface_default.xml'
+eye_cascade_path = r'/Users/tanakaakira/zoomgame/haarcascade_eye.xml'
+mouth_cascade_path = r'/Users/tanakaakira/zoomgame/haarcascade_mcs_mouth.xml'
 face_cascade = cv2.CascadeClassifier(face_cascade_path)
 eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 mouth_cascade = cv2.CascadeClassifier(mouth_cascade_path)
 
 camera = cv2.VideoCapture(0)
-
+import os
 
 assert os.path.isfile(face_cascade_path), 'haarcascade_frontalface_default.xml がない'
 assert os.path.isfile(mouth_cascade_path), 'haarcascade_mouth.xml がない'
@@ -37,17 +106,25 @@ def main():
     Player.containers = all
     Beam.containers = all, beams
     Alien.containers = all, aliens
-    Back_image = load_image("/Users/81903/Downloads/data/Aichi.png ")
+    Back_image = load_image("/Users/tanakaakira/zoomgame/data/Aichi.png")
     back_rect = Back_image.get_rect()
+    #et = camera.read()
+    #frame = capture_trim()
     ret, frame = camera.read()
     screen.fill([0,0,0])
+    frame,_,_  = face_detect_trim(frame)
+    '''
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    frame =cv2.resize(frame,(750,450))
+    frame =cv2.resize(frame,(800,500))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    '''
     x_offset=400
     y_offset=600
+    '''
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
-    
+    '''
+    Taitai=cv2.imread(r"/Users/tanakaakira/zoomgame/data/tai.jpg")
+    '''
     for x, y, w, h in faces:
         #cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
         face = frame[y: y + h, x: x + w]
@@ -59,30 +136,38 @@ def main():
         for (ex, ey, ew, eh) in mouth:
             cv2.rectangle(face, (ex, ey), (ex + ew, ey + eh), (255, 50, 0), -1)
         frame = mosaic_area(frame, x,y,w,h)
+    '''
+    '''
     if len(faces) >0:
         for rect in faces:
             frame = frame[rect[1]:rect[1]+rect[3],rect[0]:rect[0]+rect[2]]
     else :
         frame = Taitai
+    '''
     frame = frame.swapaxes(0,1)
     frame = pygame.surfarray.make_surface(frame)
     #faces = faces.swapaxes(0,1)
     #faces = pygame.surfarray.make_surface(faces)
     Player.image = frame
-    Alien.images = split_image(load_image("Hamburger.png"), 2)
-    Beam.image = load_image("taitai.png")
-    Taitai=cv2.imread("/Users/81903/Downloads/data/tai.jpg")
-    kao=cv2.imread("/Users/81903/Downloads/data/face.png")
+    Alien.images = split_image(load_image("/Users/tanakaakira/zoomgame/data/Hamburger.png"), 2)
+    Beam.image = load_image("/Users/tanakaakira/zoomgame/data/taitai.png")
+    Taitai=cv2.imread("/Users/tanakaakira/zoomgame/data/tai.jpg")
+    kao=cv2.imread("/Users/tanakaakira/zoomgame/data/face.png")
     Taitai =cv2.resize(Taitai,(240,320))
     player = Player()
     Alien((50,30))
     clock = pygame.time.Clock()
     try:
         while True:
+            #ret = camera.read()
+            #frame = capture_trim()
             ret, frame = camera.read()
             screen.fill([0,0,0])
+            frame,_,_  = face_detect_trim(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame =cv2.resize(frame,(750,450))
+            '''
+            
+            frame =cv2.resize(frame,(800,500))
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
             
@@ -96,12 +181,18 @@ def main():
                 mouth = mouth_cascade.detectMultiScale(face_gray)
                 for (ex, ey, ew, eh) in mouth:
                     cv2.rectangle(face, (ex, ey), (ex + ew, ey + eh), (255, 50, 0), -1)
-                frame = mosaic_area(frame, x,y,w,h)
+                #frame = mosaic_area(frame, x,y,w,h)
+            '''
+            '''
             if len(faces) >0:
                 for rect in faces:
                     frame = frame[rect[1]:rect[1]+rect[3],rect[0]:rect[0]+rect[2]]
+                    print("みえるお")
             else :
                 frame = Taitai
+                print("たいたい")
+            
+            '''
             frame = frame.swapaxes(0,1)
             frame = pygame.surfarray.make_surface(frame)
             #faces = faces.swapaxes(0,1)
@@ -156,8 +247,8 @@ class Player(pygame.sprite.Sprite):
 
 class Alien(pygame.sprite.Sprite):
     """エイリアン"""
-    speed = 15  # 移動速度
-    animcycle = 18  # アニメーション速度
+    speed = 50  # 移動速度
+    animcycle = 50  # アニメーション速度
     frame = 0
     move_width = 700  # 横方向の移動範囲
     prob_beam = 0.05  # ビームを発射する確率
