@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # リンゴと敵を動かすプログラム
 # 作成者: 椎名
+# ああ
 
 import pygame
 from pygame.locals import *
