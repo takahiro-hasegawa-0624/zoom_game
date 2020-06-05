@@ -91,7 +91,7 @@ def main():
         appeartime = np.random.randint(2000,gameduration)
         #消滅時刻　　　　
         disappeartime = min(gameduration, appeartime + np.random.randint(appleduration_min,appleduration_max))
-        apple = Sprite("apple.png",(x_init, y_init), (vx_init,vy_init), 0, (appeartime, disappeartime), False)
+        apple = Sprite("../images/apple.png",(x_init, y_init), (vx_init,vy_init), 0, (appeartime, disappeartime), False)
         group.add(apple)
 
     # スプライト(敵)の追加
@@ -123,7 +123,7 @@ def main():
         appeartime = np.random.randint(2000,gameduration)
         #消滅時刻　　　　
         disappeartime = min(gameduration, appeartime + np.random.randint(enemyduration_min,enemyduration_max))
-        enemy = Sprite("enemy.png",(x_init, y_init), (vx_init,vy_init), 0, (appeartime, disappeartime), False)
+        enemy = Sprite("../images/enemy.png",(x_init, y_init), (vx_init,vy_init), 0, (appeartime, disappeartime), False)
         group.add(enemy)
     clock = pygame.time.Clock()
 
