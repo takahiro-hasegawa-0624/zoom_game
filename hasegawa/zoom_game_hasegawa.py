@@ -13,18 +13,36 @@ face_predictor = dlib.shape_predictor(predictor_path)
 # https://qiita.com/mamon/items/bb2334eef596f8cacd9b
 # https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
 def face_detect_trim(img):
-    #画像を縦2つ×横2つに4分割。[左上, 右上, 左下, 右下]の順に格納した配列を返す。
-    hight=img.shape[0]
+    '''
+    左上・右上・左下・右下に4人が写っている画像から、4人の顔をトリミングし、顔の座標と口の座標を計算する
+
+    Parameters
+    ----------
+    img : np.ndarray : (height, width, color)
+        画像
+
+    Returns
+    -------
+    imgs : list : (player, height, width, color)
+        顔の部分をトリミングした画像。(左上の人・右上の人・左下の人・右下の人)の順に格納されている。
+    pos : np.array : (player, top, bottom, left, light)
+        4分割したそれぞれの画像の左上を原点とした、トリミングした画像の座標が格納されている。
+    landmaks : np.array : (player, the number of landmarks, position)
+        4分割したそれぞれの画像の左上を原点とした、口の座標が格納されている。
+    '''
+    height=img.shape[0]
     width=img.shape[1]
     
     # 顔検出
     img_gry = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     faces = face_detector(img_gry, 1)
 
-    player=0
+    player=0 # playerをとりあえず0としておく。
+    
     imgs=[0]*4
     pos = [0]*4
     landmarks = [0]*4
+    
     # 検出した全顔に対して処理
     for face in faces[:4]:
         # 顔のランドマーク検出
@@ -32,7 +50,9 @@ def face_detect_trim(img):
         # 処理高速化のためランドマーク群をNumPy配列に変換(必須)
         landmark = face_utils.shape_to_np(landmark)[60:68]
         
-        if int(face.top()/(hight/2)) >= 1:
+        # 顔が画面の第何象限にあるかでプレイヤー番号をつける
+        # 左上 : 0, 右上 : 1, 左下 : 2, 右下 : 3 をインデックスとしている
+        if int(face.top()/(height/2)) >= 1:
             if int(face.left()/(width/2)) >= 1:
                 player = 3
             else:
@@ -48,8 +68,8 @@ def face_detect_trim(img):
         #cv2.rectangle(img, tuple([face.left(),face.top()]), tuple([face.right(),face.bottom()]), (0, 0,255), thickness=2)
         
         landmark[:,0] -= int(face.left()/(width/2))*int((width/2))
-        landmark[:,1] -= int(face.top()/(hight/2))*int((hight/2))
-        pos[player] = [face.top()%(int(hight/2)), face.bottom()%(int(hight/2))+1, face.left()%(int(width/2)), face.right()%(int(width/2))+1]
+        landmark[:,1] -= int(face.top()/(height/2))*int((height/2))
+        pos[player] = [face.top()%(int(height/2)), face.bottom()%(int(height/2))+1, face.left()%(int(width/2)), face.right()%(int(width/2))+1]
         landmarks[player] = landmark
         
         print(player)
