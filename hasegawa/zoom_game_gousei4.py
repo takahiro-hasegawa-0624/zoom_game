@@ -270,6 +270,7 @@ def main():
     clock = pygame.time.Clock()
     try:
         while True:
+            time = pygame.time.get_ticks()
             #ret = camera.read()
             #frame = capture_trim()
             ret, frame = camera.read()
