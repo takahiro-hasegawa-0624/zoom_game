@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# リンゴと敵を動かすプログラム
+# 作成者: 椎名
+# ああ
+# 142857
+
 import pygame
 from pygame.locals import *
 import sys
@@ -67,10 +72,11 @@ def main():
         #出現方向
         appeardirection = np.random.choice(['l','r','u','d'])
 
-        #初速
         theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * math.pi
         vx_init = v_apple * math.cos(theta)
         vy_init = v_apple * math.sin(theta)
+
+        #初期位置と初速
         if appeardirection =='u':
             x_init = np.random.randint(0,screenwidth)
             y_init = 0
@@ -103,6 +109,8 @@ def main():
         theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * math.pi
         vx_init = v_apple * math.cos(theta)
         vy_init = v_apple * math.sin(theta)
+
+        #初期位置と初速
         if appeardirection =='u':
             x_init = np.random.randint(0,screenwidth)
             y_init = 0
