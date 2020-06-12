@@ -158,41 +158,43 @@ def main():
     Alien.images = split_image(load_image("../images/hamburger.png"), 2)
     Beam.image = load_image("../images/bullet.png")
     Taitai=cv2.imread("../images/AnacondaProjects/owl.jpg")
-    Taitai =cv2.resize(Taitai,(240,320))
+    Taitai =cv2.resize(Taitai, (240, 320))
     
     imgs, pos_prev, landmarks_prev  = face_detect_trim(frame)
+    players = [] #4人分のプレイヤーインスタンスを格納する配列
     
-    for i in range(1):
+    for i in range(4):
         frame = imgs[i]
         
-        if len(frame)==1: #顔が認識されないに表示する画像を指定
-            frame=Taitai
-        frame = frame.swapaxes(0,1)
+        if len(frame) == 1: #顔が認識されないに表示する画像を指定
+            frame = Taitai
+        frame = frame.swapaxes(0, 1)
         frame = pygame.surfarray.make_surface(frame)
         Player.image = frame
-        player = Player(pos_prev[i],pos_prev[i])
+        player = Player(pos_prev[i], pos_prev[i])
+        players[i] = player
         
-    Alien((50,30))
+    Alien((50, 30))
     clock = pygame.time.Clock()
     try:
         while True:
             ret, frame = camera.read()
             screen.fill([0,0,0])
-            imgs, pos, landmarks  = face_detect_trim(frame)
+            imgs, pos, landmarks = face_detect_trim(frame)
             
-            for i in range(1):
+            for i in range(4):
                 frame = imgs[i]
-                if len(frame)==1:
-                    frame=Taitai
+                if len(frame) == 1:
+                    frame = Taitai
 
-                frame = frame.swapaxes(0,1)
+                frame = frame.swapaxes(0, 1)
                 frame = pygame.surfarray.make_surface(frame)
                 screen.blit(Back_image, back_rect)
                 Player.image = frame
-                player.pos_update(pos[i], pos_prev[i])
+                players[i].pos_update(pos[i], pos_prev[i])
                 clock.tick(40)
                 all.update()
-                collision_detection(player, aliens, beams)
+                collision_detection(players[i], aliens, beams)
                 all.draw(screen)
                 pygame.display.update()
                 
@@ -207,7 +209,7 @@ def main():
                     pygame.quit()
                     sys.exit()
             screen.blit(Back_image, back_rect)
-    except (KeyboardInterrupt,SystemExit):
+    except (KeyboardInterrupt, SystemExit):
         pygame.quit()
         cv2.destroyAllWindows()
         
