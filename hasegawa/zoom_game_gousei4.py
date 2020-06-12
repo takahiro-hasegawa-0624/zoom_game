@@ -177,14 +177,15 @@ def main():
             #frame = capture_trim()
             ret, frame = camera.read()
             screen.fill([0,0,0])
-            frame,_,_  = face_detect_trim(frame)
+            frame,_,landmark  = face_detect_trim(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 
-            if len(landmark[0]>0):
-                landmark=[landmark[0],landmark[1],landmark[2],landmark[3],landmark[4],landmark[5],landmark[6],landmark[7]]
-                print("OK")
-            else:
+            #if len(landmark[0])>0:
+                #landmark=[landmark[0],landmark[1],landmark[2],landmark[3],landmark[4],landmark[5],landmark[6],landmark[7]]
+                #print("OK")
+            #else:
+            if len(landmark[0])==0:
                 landmark = [[0,0]]
 
 
@@ -226,7 +227,7 @@ def main():
             #faces = pygame.surfarray.make_surface(faces)
             screen.blit(Back_image, back_rect)
             Player.image = frame
-            clock.tick(40)
+            clock.tick(5)
             all.update()
             collision_detection(player, aliens, beams, minplot, maxplot,screen)
             all.draw(screen)
@@ -247,14 +248,16 @@ def collision_detection(player, aliens, beams, minplot, maxplot,screen):
     """衝突判定"""
     # プレイヤーとビームの衝突判定
     #pygame.sprite.spritecollide(player, beams, True)
-    c=0
+    #c=0
     
     for Beam in beams:
-        #print(Beam.rect.center, minplot, maxplot,c)
-        if minplot[0] <= Beam.rect.center[0] <= maxplot[0] and minplot[1] <= Beam.rect.center[1] <= maxplot[1]:
+
+        #if c==0:
+            #print(Beam.rect.center, minplot, maxplot,c)
+        if minplot[0] <= Beam.rect.center[0] and Beam.rect.center[0] <= maxplot[0] and minplot[1] <= Beam.rect.center[1] and Beam.rect.center[0] <= maxplot[1]:
             Beam.kill()
             #print("ぴー！",c)
-        c+=1
+        #c+=1
     return None
     
 
