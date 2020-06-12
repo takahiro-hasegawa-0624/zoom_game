@@ -7,7 +7,7 @@ from imutils import face_utils
 import cv2
 
 face_detector = dlib.get_frontal_face_detector()
-predictor_path = '/Users/tanakaakira/zoom_game-hasegawa/hasegawa/shape_predictor_68_face_landmarks.dat'
+predictor_path = 'shape_predictor_68_face_landmarks.dat'
 face_predictor = dlib.shape_predictor(predictor_path)
 
 # https://qiita.com/mamon/items/bb2334eef596f8cacd9b
@@ -111,9 +111,9 @@ def capture_trim():
 #face_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_frontalface_default.xml'
 #eye_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_eye.xml'
 #mouth_cascade_path = r'C:\Users\81903\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\opencv-master\data\haarcascades/haarcascade_mcs_mouth.xml'
-face_cascade_path = r'/Users/tanakaakira/zoomgame/haarcascade_frontalface_default.xml'
-eye_cascade_path = r'/Users/tanakaakira/zoomgame/haarcascade_eye.xml'
-mouth_cascade_path = r'/Users/tanakaakira/zoomgame/haarcascade_mcs_mouth.xml'
+face_cascade_path = r'../game_base/data/haar_face.xml'
+eye_cascade_path = r'../game_base/data/haar_eye.xml'
+mouth_cascade_path = r'../game_base/data/haar_mouth.xml'
 face_cascade = cv2.CascadeClassifier(face_cascade_path)
 eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 mouth_cascade = cv2.CascadeClassifier(mouth_cascade_path)
@@ -145,7 +145,7 @@ def main():
     Player.containers = all
     Beam.containers = all, beams
     Alien.containers = all, aliens
-    Back_image = load_image("/Users/takahiro/AnacondaProjects/Aichi.png")
+    Back_image = load_image("../images/bg.png")
     back_rect = Back_image.get_rect()
     #et = camera.read()
     #frame = capture_trim()
@@ -155,9 +155,9 @@ def main():
     x_offset=400
     y_offset=600
 
-    Alien.images = split_image(load_image("/Users/takahiro/AnacondaProjects/Hamburger.png"), 2)
-    Beam.image = load_image("/Users/takahiro/AnacondaProjects/taitai.png")
-    Taitai=cv2.imread("/Users/takahiro/AnacondaProjects/tai.jpg")
+    Alien.images = split_image(load_image("../images/hamburger.png"), 2)
+    Beam.image = load_image("../images/bullet.png")
+    Taitai=cv2.imread("../images/AnacondaProjects/owl.jpg")
     Taitai =cv2.resize(Taitai,(240,320))
     
     imgs, pos_prev, landmarks_prev  = face_detect_trim(frame)
