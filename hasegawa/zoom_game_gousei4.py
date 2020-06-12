@@ -6,6 +6,10 @@ import dlib
 from imutils import face_utils
 import cv2
 
+########↓↓↓追加↓↓↓####################
+import math
+########↑↑↑追加↑↑↑####################
+
 face_detector = dlib.get_frontal_face_detector()
 predictor_path = '/Users/tanakaakira/zoom_game-hasegawa/hasegawa/shape_predictor_68_face_landmarks.dat'
 face_predictor = dlib.shape_predictor(predictor_path)
@@ -90,7 +94,13 @@ import pygame
 from pygame.locals import *
 import random
 import sys
-SCR_RECT = Rect(0, 0, 1000, 800)
+########↓↓↓追加↓↓↓####################
+import math
+screenwidth = 800; screenheight = 450
+SCR_RECT = Rect(0, 0, screenwidth, screenheight)
+########↑↑↑追加↑↑↑####################
+
+# SCR_RECT = Rect(0, 0, 1000, 800)
 
 '''
 def mosaic(src, ratio=0.08):
@@ -101,6 +111,73 @@ def mosaic_area(src, x, y, width, height, ratio=0.08):
     dst[y:y + height, x:x + width] = mosaic(dst[y:y + height, x:x + width], ratio)
     return dst
 '''
+#######↓↓↓追加しました↓↓↓###########
+n_apple = 5   #リンゴの数
+n_enemy = 5   #敵の数
+gameduration = 20000    #ゲームの所要時間(ms)
+appleduration_min = 20000   
+appleduration_max = 21000
+v_apple = 20   #リンゴの速さ(pixel / frame)
+
+enemyduration_min = 20000   
+enemyduration_max = 21000
+v_enemy = 40   #敵の速さ(pixel / frame)
+
+# リンゴおよび敵のクラス
+class Apple(pygame.sprite.Sprite):
+    # スプライトを作成(画像ファイル名, 獲得スコア)
+    def __init__(self, filename, score):
+        #出現方向
+        appeardirection = np.random.choice(['l','r','u','d'])
+
+        theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * math.pi
+        vx_init = v_apple * math.cos(theta)
+        vy_init = v_apple * math.sin(theta)
+
+        #初期位置と初速
+        if appeardirection =='u':
+            x_init = np.random.randint(0,screenwidth)
+            y_init = 0
+        elif appeardirection == 'd':
+            x_init = np.random.randint(0,screenwidth)
+            y_init = screenheight
+            vy_init = -vy_init
+        elif appeardirection == 'l':
+            x_init = 0
+            y_init = np.random.randint(0,screenheight)
+            vx_init,vy_init = vy_init,vx_init
+        else:
+            x_init = screenwidth
+            y_init = np.random.randint(0,screenheight)
+            vx_init,vy_init = -vy_init,vx_init
+
+        #出現時刻
+        appeartime = np.random.randint(2000,gameduration)
+        #消滅時刻　　　　
+        disappeartime = min(gameduration, appeartime + np.random.randint(appleduration_min,appleduration_max))
+
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load(filename).convert_alpha()
+        w = self.image.get_width()
+        h = self.image.get_height()
+        self.rect = Rect(x_init, y_init, w, h)
+        self.vx = vx_init
+        self.vy = vy_init
+        self.appeartime = appeartime
+        self.disappeartime = disappeartime
+        self.exist = False
+
+    def update(self):
+        if self.exist:
+            self.rect.move_ip(self.vx, self.vy)
+        # 壁と衝突時の処理(跳ね返り)
+        if self.rect.left < 0 or self.rect.right > screenwidth:
+            self.vx = -self.vx
+        if self.rect.top < 0 or self.rect.bottom > screenheight:
+            self.vy = -self.vy
+        # 壁と衝突時の処理(壁を超えないように)
+        self.rect = self.rect.clamp(SCR_RECT)
+#######↑↑↑追加しました↑↑↑###########
 
 
 def main():
@@ -110,6 +187,26 @@ def main():
     all = pygame.sprite.RenderUpdates()
     aliens = pygame.sprite.Group()  # エイリアングループ
     beams = pygame.sprite.Group()   # ビームグループ
+
+    ######↓↓↓追加↓↓↓###########
+    # 全てのスプライトが入ったスプライトグループの作成
+    group_apple_all = pygame.sprite.RenderUpdates()
+
+    # 画面上に表示されているスプライトからなるグループ
+    # ゲーム画面に表示するのはこっち
+    group_apple_exist = pygame.sprite.RenderUpdates()
+
+    # スプライト(リンゴ)の追加
+    for _ in range(n_apple):
+        apple = Apple("apple.png",1)
+        group_apple_all.add(apple)
+
+    # スプライト(敵)の追加
+    for _ in range(n_enemy):
+        enemy = Apple("enemy.png",-3)
+        group_apple_all.add(enemy)
+    ######↑↑↑追加↑↑↑#############
+
     Player.containers = all
     Beam.containers = all, beams
     Alien.containers = all, aliens
@@ -180,6 +277,22 @@ def main():
             frame,_,landmark  = face_detect_trim(frame)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
+            #####↓↓↓追加↓↓↓############
+            for obj in group_apple_all:
+                    # obj.appeartimeになったらgroup_apple_existに入れる
+                if obj.exist == False and time >= obj.appeartime:
+                    group_apple_exist.add(obj)
+                    obj.exist = True
+                # obj.disappeartimeになったらgroup_apple_existから消す
+                if obj.exist == True and time > obj.disappeartime:
+                    group_apple_exist.remove(obj)
+                    obj.exist = False
+
+            # スプライトグループを更新
+            group_apple_exist.update()
+            # スプライトを描画
+            group_apple_exist.draw(screen)
+            ######↑↑↑追加↑↑↑#############
 
             #if len(landmark[0])>0:
                 #landmark=[landmark[0],landmark[1],landmark[2],landmark[3],landmark[4],landmark[5],landmark[6],landmark[7]]
@@ -325,6 +438,9 @@ class Beam(pygame.sprite.Sprite):
         self.rect.move_ip(0, self.speed)  # 下へ移動
         if self.rect.bottom > SCR_RECT.height:  # 下端に達したら除去
             self.kill()
+
+
+
 
 def load_image(filename, colorkey=None):
     """画像をロードして画像と矩形を返す"""
