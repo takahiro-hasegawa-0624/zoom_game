@@ -245,29 +245,29 @@ def main():
     ret, frame = camera.read()
     screen.fill([0,0,0])
     Taitai=cv2.imread(r"/Users/tanakaakira/zoomgame/data/tai.jpg")
-
+    Taitai =cv2.resize(Taitai,(240,320))
     font = pygame.font.Font(None, 24)  # 経過時間表示の文字
 
 
-    if type(face_detect_trim(frame)) is tuple:
-        frame,_,_  = face_detect_trim(frame)
-        _,_,landmark = face_detect_trim(frame)
-    else:
-        frame = Taitai
-        landmark = [[0,0]]
+    frame,_,landmark = face_detect_trim(frame)
+    for fr in frame:
+        if len(fr) == 1:
+            fr = Taitai
+            #landmark = [[0,0]]
     
     #x_offset=400
     #y_offset=600
     score = 0
 
-    frame = frame.swapaxes(0,1)
-    frame = pygame.surfarray.make_surface(frame)
-    Player.image = frame
+    player = Player()[4]
+    for i, fr in enumerate(frame):
+        fr = fr.swapaxes(0,1)
+        fr = pygame.surfarray.make_surface(fr)
+        player[i].image = fr
     #Alien.images = split_image(load_image("/Users/tanakaakira/zoomgame/data/Hamburger.png"), 2)
     #Beam.image = load_image("/Users/tanakaakira/zoomgame/data/taitai.png")
     #Taitai=cv2.imread("/Users/tanakaakira/zoomgame/data/tai.jpg")
-    Taitai =cv2.resize(Taitai,(240,320))
-    player = Player()
+    
     #Alien((50,30))
     clock = pygame.time.Clock()
     try:
@@ -277,6 +277,9 @@ def main():
             #frame = capture_trim()
             ret, frame = camera.read()
             screen.fill([0,0,0])
+            if not ret:
+                print("no camera")
+                continue
             
             '''
             if type(face_detect_trim(frame)) is tuple:
@@ -288,7 +291,8 @@ def main():
             '''
             
             frame,_,landmark  = face_detect_trim(frame)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            for fr in frame:
+                fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
 
             #####↓↓↓追加↓↓↓############
             for obj in group_apple_all:
@@ -308,12 +312,13 @@ def main():
             minplot=(player.rect.left + np.min(landmark,axis=0)[0], player.rect.top + np.min(landmark,axis=0)[1])
             maxplot=(player.rect.left + np.max(landmark,axis=0)[0], player.rect.top + np.max(landmark,axis=0)[1])
             
-            
-            frame = frame.swapaxes(0,1)
-            frame = pygame.surfarray.make_surface(frame)
+            for fr in frame:
+                fr = fr.swapaxes(0,1)
+                fr = pygame.surfarray.make_surface(fr)
             
             screen.blit(Back_image, back_rect)
-            Player.image = frame
+            for i, fr in enumerate(frame):
+                player[i].image = fr
             clock.tick(30)
 
             ###ここからaquiracheが書き直しました
