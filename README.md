@@ -8,7 +8,8 @@
 - pygame
 
 
-- http://dlib.net/files/ ‚©‚ç shape_predictor_68_face_landmarks.dat ‚ğƒ_ƒEƒ“ƒ[ƒhE‰ğ“€‚µ‚ÄAƒXƒNƒŠƒvƒg‚Æ“¯‚¶ƒfƒBƒŒƒNƒgƒŠ‚É“ü‚ê‚Ä‚­‚¾‚³‚¢B
+- http://dlib.net/files/ ã‹ã‚‰ shape_predictor_68_face_landmarks.dat ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ãƒ»è§£å‡ã—ã¦ã€ã‚¹ã‚¯ãƒªãƒ—ãƒˆã¨åŒã˜ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã«å…¥ã‚Œã¦ãã ã•ã„ã€‚
 =======
 - numpy
 - opencv-python
+- math
