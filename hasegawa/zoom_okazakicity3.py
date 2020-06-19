@@ -80,10 +80,10 @@ from pygame.locals import *
 import random
 import sys
 ########↓↓↓追加↓↓↓####################
-screenwidth = 800; screenheight = 450
+screenwidth = 1000; screenheight = 800
 ########↑↑↑追加↑↑↑####################
 
-SCR_RECT = Rect(0, 0, 1000, 800)
+SCR_RECT = Rect(0, 0, screenwidth, 450)
 
 
 #######↓↓↓追加しました↓↓↓###########
@@ -203,6 +203,9 @@ def main():
     screen.fill([0,0,0])
     Taitai=cv2.imread(r"/Users/tanakaakira/zoomgame/data/tai.jpg")
 
+    font = pygame.font.Font(None, 24)  # 経過時間表示の文字
+
+
     if type(face_detect_trim(frame)) is tuple:
         frame,_,_  = face_detect_trim(frame)
         _,_,landmark = face_detect_trim(frame)
@@ -268,7 +271,7 @@ def main():
             
             screen.blit(Back_image, back_rect)
             Player.image = frame
-            clock.tick(5)
+            clock.tick(30)
 
             ###ここからaquiracheが書き直しました
             
@@ -279,14 +282,14 @@ def main():
                 score = score +collision_detection(player, group_apple_exist , minplot, maxplot,screen)
                 #print(score)
                 #collision_detection(player, group_apple_exist , minplot, maxplot,screen)
-            
             group_apple_exist.update()
             all.update()
             
 
             all.draw(screen)
             group_apple_exist.draw(screen)
-
+            text = font.render("Score:" + str(score), True, (120,0,120))
+            screen.blit(text, [900,750])
             ###ここまでaquiracheが書き直しました
             pygame.display.update()
 
@@ -299,7 +302,6 @@ def main():
                     sys.exit()
             screen.blit(Back_image, back_rect)
             
-            font = pygame.font.Font(None, 24)
             
 
     except (KeyboardInterrupt,SystemExit):
@@ -325,7 +327,7 @@ def collision_detection(player, group_apple_exist , minplot, maxplot,screen):
 class Player(pygame.sprite.Sprite):
     """自機"""
     speed = 50  # 移動速度
-    reload_time = 15  # リロード時間
+    reload_time = 20  # リロード時間
     def __init__(self):
         # imageとcontainersはmain()でセット
         pygame.sprite.Sprite.__init__(self, self.containers)
