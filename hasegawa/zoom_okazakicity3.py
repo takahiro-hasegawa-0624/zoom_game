@@ -1,4 +1,4 @@
-# basic
+ # basic
 # -*- coding: utf-8 -*-
 import numpy as np
 
@@ -11,9 +11,9 @@ import cv2
 import math
 ########↑↑↑追加↑↑↑####################
 
-face_detector = dlib.get_frontal_face_detector()
-predictor_path = '/Users/tanakaakira/zoom_game-hasegawa/hasegawa/shape_predictor_68_face_landmarks.dat'
-face_predictor = dlib.shape_predictor(predictor_path)
+#face_detector = dlib.get_frontal_face_detector()
+#predictor_path = '/Users/tanakaakira/zoom_game-hasegawa/hasegawa/shape_predictor_68_face_landmarks.dat'
+#face_predictor = dlib.shape_predictor(predictor_path)
 
 # https://qiita.com/mamon/items/bb2334eef596f8cacd9b
 # https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
@@ -39,15 +39,14 @@ def face_detect_trim(img):
 
     Returns
     -------
-    imgs : list : (player, height, width, color)
+    imgs : list : imgs[player][height][width][color]
         顔の部分をトリミングした画像。(左上の人・右上の人・左下の人・右下の人)の順に格納されている。
-    pos : np.array : (player, [top, bottom, left, light])
+    pos : np.array : pos[player][top][bottom][left][right]
         4分割したそれぞれの画像の左上を原点とした、トリミングした画像の座標が格納されている。
-    landmarks : np.array : (player, the number of landmarks, position)
+    landmarks : np.array : landmark[player][the number of landmarks][position]
         4分割したそれぞれの画像の左上を原点とした、口の座標が格納されている。
     '''
-    mag = 1
-    img = cv2.resize(img , (int(1600*mag), int(900*mag)))
+    # img = cv2.resize(img , (int(1600*mag), int(900*mag)))
     #height=img.shape[0]
     #width=img.shape[1]
     
@@ -55,7 +54,7 @@ def face_detect_trim(img):
     
     trim_imgs=[[0]]*4
     pos = [[0,0,0,0]]*4
-    landmarks = [0]*4
+    landmarks = [[0,0]]*4
     
     for i, img in enumerate(imgs):
         height=img.shape[0]
@@ -72,19 +71,20 @@ def face_detect_trim(img):
         # 処理高速化のためランドマーク群をNumPy配列に変換(必須)
         landmark = face_utils.shape_to_np(landmark)[60:68]
 
+        
         img_trim = img[face.top():face.bottom(), face.left():face.right()]
-        img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/mag), int(img_trim.shape[0]/mag)))
-        tmp1 = int(img_trim.shape[1]/mag)
-        tmp2 = int(img_trim.shape[0]/mag)
+        img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/img.shape[1]*800), int(img_trim.shape[0]/img.shape[0]*450)))
+        tmp1 = img_trim.shape[1]
+        tmp2 = img_trim.shape[0]
         img_trim = cv2.resize(img_trim , (100, 100))
         
         trim_imgs[i] = img_trim
         
         #landmark[:,0] = landmark[:,0] - np.floor(landmark[:,0]/mag)
         #landmark[:,1] = landmark[:,1] - np.floor(landmark[:,1]/mag)
-        pos[i] = [int(face.top()/mag), int(face.bottom()/mag), int(face.left()/mag), int(face.right()/mag)]
-        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/mag))/tmp1*100
-        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/mag))/tmp2*100
+        pos[i] = [int(face.top()/img.shape[0]*450), int(face.bottom()/img.shape[0]*450), int(face.left()/img.shape[1]*800), int(face.right()/img.shape[1]*800)]
+        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/img.shape[1]*800))/tmp1*100
+        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/img.shape[0]*450))/tmp2*100
         landmarks[i] = landmark
         
         # ランドマーク描画
@@ -114,7 +114,7 @@ def capture_trim():
     cv2.destroyAllWindows()
     return None
 
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(1)
 import os
 
 
@@ -219,12 +219,12 @@ def main():
     group_apple_exist = pygame.sprite.RenderUpdates()
 
     for _ in range(n_apple):
-        apple = Apple("/Users/tanakaakira/zoomgame/data/apple.png",1)
+        apple = Apple("apple.png",1)
         group_apple_all.add(apple)
 
     # スプライト(敵)の追加
     for _ in range(n_enemy):
-        enemy = Apple("/Users/tanakaakira/zoomgame/data/enemy.png",-3)
+        enemy = Apple("enemy.png",-3)
         group_apple_all.add(enemy)
 
     ######↑↑↑追加↑↑↑#############
@@ -238,33 +238,33 @@ def main():
     #Apple.containers = all
     ####kokomadetuika
 
-    Back_image = load_image("/Users/tanakaakira/zoomgame/data/Aichi.png")
+    Back_image = load_image("Aichi.png")
     back_rect = Back_image.get_rect()
     #et = camera.read()
     #frame = capture_trim()
     ret, frame = camera.read()
     screen.fill([0,0,0])
-    Taitai=cv2.imread(r"/Users/tanakaakira/zoomgame/data/tai.jpg")
+    Taitai=cv2.imread(r"tai.jpg")
     Taitai =cv2.resize(Taitai,(240,320))
     font = pygame.font.Font(None, 24)  # 経過時間表示の文字
 
 
     frame,pos,landmark = face_detect_trim(frame)
-    for fr in frame:
-        if len(fr) == 1:
-            fr = Taitai
+    for i in range(4):
+        if len(frame[i]) == 1:
+            frame[i] = Taitai
             #landmark = [[0,0]]
     
     #x_offset=400
     #y_offset=600
     score = 0
 
-    player = Player()[4]
+    player = [Player(),Player(),Player(),Player()]
     for i, fr in enumerate(frame):
         fr = fr.swapaxes(0,1)
         fr = pygame.surfarray.make_surface(fr)
         player[i].image = fr
-        player.init(pos[i])
+        player[i].init(pos[i])
     #Alien.images = split_image(load_image("/Users/tanakaakira/zoomgame/data/Hamburger.png"), 2)
     #Beam.image = load_image("/Users/tanakaakira/zoomgame/data/taitai.png")
     #Taitai=cv2.imread("/Users/tanakaakira/zoomgame/data/tai.jpg")
@@ -292,8 +292,9 @@ def main():
             '''
             
             frame,pos,landmark  = face_detect_trim(frame)
-            for fr in frame:
-                fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
+            for i in range(4):
+                if len(frame[i]) == 1:
+                    frame[i] = Taitai
 
             #####↓↓↓追加↓↓↓############
             for obj in group_apple_all:
@@ -312,11 +313,10 @@ def main():
             for i in range(4):
                 minplot=(player[i].rect.left + np.min(landmark,axis=0)[0], player[i].rect.top + np.min(landmark,axis=0)[1])
                 maxplot=(player[i].rect.left + np.max(landmark,axis=0)[0], player[i].rect.top + np.max(landmark,axis=0)[1])
-                player[i].update_pos(pos[i])
-            
-            for fr in frame:
-                fr = fr.swapaxes(0,1)
-                fr = pygame.surfarray.make_surface(fr)
+                player[i].pos_update(pos[i])
+                
+                frame[i] = frame[i].swapaxes(0,1)
+                frame[i] = pygame.surfarray.make_surface(frame[i])
             
             screen.blit(Back_image, back_rect)
             for i, fr in enumerate(frame):
@@ -420,7 +420,6 @@ class Alien(pygame.sprite.Sprite):
         self.frame += 1
 #        self.image = self.images[self.frame/self.animcycle%2]
         self.image = self.images[self.frame//self.animcycle%2]
-
 class Beam(pygame.sprite.Sprite):
     """エイリアンが発射するビーム"""
     speed = 25  # 移動速度
@@ -433,13 +432,12 @@ class Beam(pygame.sprite.Sprite):
         self.rect.move_ip(0, self.speed)  # 下へ移動
         if self.rect.bottom > SCR_RECT.height:  # 下端に達したら除去
             self.kill()
-
 '''
 
 
 def load_image(filename, colorkey=None):
     """画像をロードして画像と矩形を返す"""
-    filename = os.path.join("data", filename)
+    #filename = os.path.join("data", filename)
     try:
         image = pygame.image.load(filename)
     except pygame.error as message:
@@ -465,7 +463,6 @@ def split_image(image, n):
         surface.convert()
         image_list.append(surface)
     return image_list
-
 def load_sound(filename):
     filename = os.path.join("data", filename)
     return pygame.mixer.Sound(filename)
