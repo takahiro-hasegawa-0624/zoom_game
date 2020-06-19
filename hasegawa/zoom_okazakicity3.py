@@ -21,34 +21,69 @@ face_predictor = dlib.shape_predictor(predictor_path)
 #https://gist.github.com/radames/1e7c794842755683162b
 
 def face_detect_trim(img):
-    # 顔検出
-    img_gry = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    faces = face_detector(img_gry, 1)
+    '''
+    左上・右上・左下・右下に4人が写っている画像から、4人の顔をトリミングし、顔の座標と口の座標を計算する
 
-    pos = [0,0,0,0]
-    landmark = [[]]
-    # 検出した全顔に対して処理
-    for face in faces:
+    Parameters
+    ----------
+    img : np.ndarray : (height, width, color)
+        画像
+
+    Returns
+    -------
+    imgs : list : (player, height, width, color)
+        顔の部分をトリミングした画像。(左上の人・右上の人・左下の人・右下の人)の順に格納されている。
+    pos : np.array : (player, [top, bottom, left, light])
+        4分割したそれぞれの画像の左上を原点とした、トリミングした画像の座標が格納されている。
+    landmarks : np.array : (player, the number of landmarks, position)
+        4分割したそれぞれの画像の左上を原点とした、口の座標が格納されている。
+    '''
+    mag = 1
+    img = cv2.resize(img , (int(1600*mag), int(900*mag)))
+    #height=img.shape[0]
+    #width=img.shape[1]
+    
+    imgs = divide_img_4(img)
+    
+    trim_imgs=[[0]]*4
+    pos = [[0,0,0,0]]*4
+    landmarks = [0]*4
+    
+    for i, img in enumerate(imgs):
+        height=img.shape[0]
+        width=img.shape[1]
+        # 顔検出
+        img_gry = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        faces = face_detector(img_gry, 1)
+        if len(faces)==0:
+            continue
+        face = faces[0]
+    
         # 顔のランドマーク検出
         landmark = face_predictor(img_gry, face)
         # 処理高速化のためランドマーク群をNumPy配列に変換(必須)
         landmark = face_utils.shape_to_np(landmark)[60:68]
 
-        img = img[face.top():face.bottom(), face.left():face.right()]
-        #cv2.rectangle(img, tuple([face.left(),face.top()]), tuple([face.right(),face.bottom()]), (0, 0,255), thickness=2)
+        img_trim = img[face.top():face.bottom(), face.left():face.right()]
+        img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/mag), int(img_trim.shape[0]/mag)))
+        tmp1 = int(img_trim.shape[1]/mag)
+        tmp2 = int(img_trim.shape[0]/mag)
+        img_trim = cv2.resize(img_trim , (100, 100))
         
-        landmark[:,0] -= face.left()
-        landmark[:,1] -= face.top()
-        pos.append([face.top(),face.bottom(),face.left(),face.right()])
-
-        #print(type(img))
-
+        trim_imgs[i] = img_trim
+        
+        #landmark[:,0] = landmark[:,0] - np.floor(landmark[:,0]/mag)
+        #landmark[:,1] = landmark[:,1] - np.floor(landmark[:,1]/mag)
+        pos[i] = [int(face.top()/mag), int(face.bottom()/mag), int(face.left()/mag), int(face.right()/mag)]
+        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/mag))/tmp1*100
+        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/mag))/tmp2*100
+        landmarks[i] = landmark
+        
         # ランドマーク描画
-        for (x, y) in landmark:
-            cv2.circle(img, (x, y), 3, (0, 0, 255), -1)
+        #for (x, y) in landmark:
+            #cv2.circle(trim_imgs[i], (int(x), int(y)), 3, (0, 0, 255), -1)
 
-        break
-    return img, pos, landmark
+    return trim_imgs, np.array(pos), np.array(landmarks)
 
 def capture_trim():
     # カメラ画像の表示 ('q'入力で終了)
@@ -83,7 +118,7 @@ import sys
 screenwidth = 1000; screenheight = 800
 ########↑↑↑追加↑↑↑####################
 
-SCR_RECT = Rect(0, 0, screenwidth, 450)
+SCR_RECT = Rect(0, 0, screenwidth, screenheight)
 
 
 #######↓↓↓追加しました↓↓↓###########
@@ -313,13 +348,12 @@ def collision_detection(player, group_apple_exist , minplot, maxplot,screen):
     """衝突判定"""
     c=0
     for Apple in group_apple_exist:
-        c+=1
         #print(Apple.rect.left,Apple.rect.top,c)
         if minplot[0] <= Apple.rect.left + Apple.rect.width and Apple.rect.left  <= maxplot[0] and minplot[1] <= Apple.rect.top + Apple.rect.height and Apple.rect.top <= maxplot[1]:
             Apple.kill()
             #print("食べたね, えらいえらい")
-            return Apple.score
-    return 0        
+            c += Apple.score
+    return c        
 ###ここまで書き直しました
     
     
