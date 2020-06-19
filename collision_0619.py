@@ -270,7 +270,7 @@ def main():
             Player.image = frame
             clock.tick(5)
 
-            ###ここからaquiracheが書き直しました
+            ###ここからaquiracheが書き直しました ←あくぅいらちぇって誰???
             
             
 
