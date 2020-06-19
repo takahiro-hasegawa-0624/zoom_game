@@ -249,7 +249,7 @@ def main():
     font = pygame.font.Font(None, 24)  # 経過時間表示の文字
 
 
-    frame,_,landmark = face_detect_trim(frame)
+    frame,pos,landmark = face_detect_trim(frame)
     for fr in frame:
         if len(fr) == 1:
             fr = Taitai
@@ -264,6 +264,7 @@ def main():
         fr = fr.swapaxes(0,1)
         fr = pygame.surfarray.make_surface(fr)
         player[i].image = fr
+        player.init(pos[i])
     #Alien.images = split_image(load_image("/Users/tanakaakira/zoomgame/data/Hamburger.png"), 2)
     #Beam.image = load_image("/Users/tanakaakira/zoomgame/data/taitai.png")
     #Taitai=cv2.imread("/Users/tanakaakira/zoomgame/data/tai.jpg")
@@ -290,7 +291,7 @@ def main():
                 landmark = [[0,0]]
             '''
             
-            frame,_,landmark  = face_detect_trim(frame)
+            frame,pos,landmark  = face_detect_trim(frame)
             for fr in frame:
                 fr = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
 
@@ -308,9 +309,10 @@ def main():
             if len(landmark[0])==0:
                 landmark = [[0,0]]
 
-
-            minplot=(player.rect.left + np.min(landmark,axis=0)[0], player.rect.top + np.min(landmark,axis=0)[1])
-            maxplot=(player.rect.left + np.max(landmark,axis=0)[0], player.rect.top + np.max(landmark,axis=0)[1])
+            for i in range(4):
+                minplot=(player[i].rect.left + np.min(landmark,axis=0)[0], player[i].rect.top + np.min(landmark,axis=0)[1])
+                maxplot=(player[i].rect.left + np.max(landmark,axis=0)[0], player[i].rect.top + np.max(landmark,axis=0)[1])
+                player[i].update_pos(pos[i])
             
             for fr in frame:
                 fr = fr.swapaxes(0,1)
@@ -373,27 +375,22 @@ def collision_detection(player, group_apple_exist , minplot, maxplot,screen):
 
 class Player(pygame.sprite.Sprite):
     """自機"""
-    speed = 50  # 移動速度
-    reload_time = 20  # リロード時間
-    def __init__(self):
+    speed = 30  # 移動速度
+    reload_time = 15  # リロード時間
+    def init(self, pos):
         # imageとcontainersはmain()でセット
-        pygame.sprite.Sprite.__init__(self, self.containers)
+        #pygame.sprite.Sprite.__init__(self, self.containers)
         self.rect = self.image.get_rect()
-        self.rect.bottom = SCR_RECT.bottom  # プレイヤーが画面の一番下
+        self.rect.top = pos[0]
+        self.rect.left = pos[2]
         self.reload_timer = 0
+        self.pos=pos
+        self.pos_prev=pos
+    def pos_update(self,pos):
+        self.pos_prev=self.pos
+        self.pos=pos
     def update(self):
-        # 押されているキーをチェック
-        pressed_keys = pygame.key.get_pressed()
-        # 押されているキーに応じてプレイヤーを移動
-        if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-self.speed, 0)
-        elif pressed_keys[K_RIGHT]:
-            self.rect.move_ip(self.speed, 0)
-        elif pressed_keys[K_UP]:
-            self.rect.move_ip(0, -self.speed)
-        elif pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, self.speed)
-        #self.rect.clamp_ip(SCR_RECT)
+        self.rect.move_ip(self.pos[0]-self.pos_prev[0], self.pos[1]-self.pos_prev[1])
 
 '''
 class Alien(pygame.sprite.Sprite):
