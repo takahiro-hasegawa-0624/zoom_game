@@ -8,6 +8,8 @@ def divide_img_4(img):
     width=img.shape[1]
     return np.array([img[:int(hight*0.5), :int(width*0.5)], img[:int(hight*0.5), int(width*0.5):], img[int(hight*0.5):, :int(width*0.5)], img[int(hight*0.5):, int(width*0.5):]])
 
+# https://qiita.com/mamon/items/bb2334eef596f8cacd9b
+# https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
 def face_detect_trim(img):
     '''
     左上・右上・左下・右下に4人が写っている画像から、4人の顔をトリミングし、顔の座標と口の座標を計算する
@@ -26,8 +28,7 @@ def face_detect_trim(img):
     landmarks : np.array : (player, the number of landmarks, position)
         4分割したそれぞれの画像の左上を原点とした、口の座標が格納されている。
     '''
-    mag = 1
-    img = cv2.resize(img , (int(1600*mag), int(900*mag)))
+    # img = cv2.resize(img , (int(1600*mag), int(900*mag)))
     #height=img.shape[0]
     #width=img.shape[1]
     
@@ -52,19 +53,20 @@ def face_detect_trim(img):
         # 処理高速化のためランドマーク群をNumPy配列に変換(必須)
         landmark = face_utils.shape_to_np(landmark)[60:68]
 
+        
         img_trim = img[face.top():face.bottom(), face.left():face.right()]
-        img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/mag), int(img_trim.shape[0]/mag)))
-        tmp1 = int(img_trim.shape[1]/mag)
-        tmp2 = int(img_trim.shape[0]/mag)
+        img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/img.shape[1]*800), int(img_trim.shape[0]/img.shape[0]*450)))
+        tmp1 = img_trim.shape[1]
+        tmp2 = img_trim.shape[0]
         img_trim = cv2.resize(img_trim , (100, 100))
         
         trim_imgs[i] = img_trim
         
         #landmark[:,0] = landmark[:,0] - np.floor(landmark[:,0]/mag)
         #landmark[:,1] = landmark[:,1] - np.floor(landmark[:,1]/mag)
-        pos[i] = [int(face.top()/mag), int(face.bottom()/mag), int(face.left()/mag), int(face.right()/mag)]
-        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/mag))/tmp1*100
-        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/mag))/tmp2*100
+        pos[i] = [int(face.top()/img.shape[0]*450), int(face.bottom()/img.shape[0]*450), int(face.left()/img.shape[1]*800), int(face.right()/img.shape[1]*800)]
+        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/img.shape[1]*800))/tmp1*100
+        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/img.shape[0]*450))/tmp2*100
         landmarks[i] = landmark
         
         # ランドマーク描画
