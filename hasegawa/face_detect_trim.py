@@ -1,5 +1,13 @@
 # https://qiita.com/mamon/items/bb2334eef596f8cacd9b
 # https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
+def divide_img_4(img):
+    '''
+    画像を縦2つ×横2つに4分割。[左上, 右上, 左下, 右下]の順に格納した配列を返す。
+    '''
+    hight=img.shape[0]
+    width=img.shape[1]
+    return np.array([img[:int(hight*0.5), :int(width*0.5)], img[:int(hight*0.5), int(width*0.5):], img[int(hight*0.5):, :int(width*0.5)], img[int(hight*0.5):, int(width*0.5):]])
+
 def face_detect_trim(img):
     '''
     左上・右上・左下・右下に4人が写っている画像から、4人の顔をトリミングし、顔の座標と口の座標を計算する
