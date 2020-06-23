@@ -14,6 +14,9 @@ import math
 #face_detector = dlib.get_frontal_face_detector()
 #predictor_path = '/Users/tanakaakira/zoom_game-hasegawa/hasegawa/shape_predictor_68_face_landmarks.dat'
 #face_predictor = dlib.shape_predictor(predictor_path)
+face_detector = dlib.get_frontal_face_detector()
+predictor_path = 'shape_predictor_68_face_landmarks.dat'
+face_predictor = dlib.shape_predictor(predictor_path)
 
 # https://qiita.com/mamon/items/bb2334eef596f8cacd9b
 # https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
@@ -24,10 +27,12 @@ def divide_img_4(img):
     '''
     画像を縦2つ×横2つに4分割。[左上, 右上, 左下, 右下]の順に格納した配列を返す。
     '''
-    hight=img.shape[0]
+    height=img.shape[0]
     width=img.shape[1]
-    return np.array([img[:int(hight*0.5), :int(width*0.5)], img[:int(hight*0.5), int(width*0.5):], img[int(hight*0.5):, :int(width*0.5)], img[int(hight*0.5):, int(width*0.5):]])
+    return np.array([img[:int(height*0.5), :int(width*0.5)], img[:int(height*0.5), int(width*0.5):], img[int(height*0.5):, :int(width*0.5)], img[int(height*0.5):, int(width*0.5):]])
 
+# https://qiita.com/mamon/items/bb2334eef596f8cacd9b
+# https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
 def face_detect_trim(img):
     '''
     左上・右上・左下・右下に4人が写っている画像から、4人の顔をトリミングし、顔の座標と口の座標を計算する
@@ -54,7 +59,7 @@ def face_detect_trim(img):
     
     trim_imgs=[[0]]*4
     pos = [[0,0,0,0]]*4
-    landmarks = [[0,0]]*4
+    landmarks = [[[0,0]]]*4
     
     for i, img in enumerate(imgs):
         height=img.shape[0]
@@ -71,8 +76,12 @@ def face_detect_trim(img):
         # 処理高速化のためランドマーク群をNumPy配列に変換(必須)
         landmark = face_utils.shape_to_np(landmark)[60:68]
 
+        top = max(face.top(), 0)
+        bottom = min(face.bottom(), min(img.shape[0:2]))
+        left = max(face.left(), 0)
+        right = min(face.right(), max(img.shape[0:2]))
         
-        img_trim = img[face.top():face.bottom(), face.left():face.right()]
+        img_trim = img[top:bottom, left:right]
         img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/img.shape[1]*800), int(img_trim.shape[0]/img.shape[0]*450)))
         tmp1 = img_trim.shape[1]
         tmp2 = img_trim.shape[0]
@@ -82,7 +91,7 @@ def face_detect_trim(img):
         
         #landmark[:,0] = landmark[:,0] - np.floor(landmark[:,0]/mag)
         #landmark[:,1] = landmark[:,1] - np.floor(landmark[:,1]/mag)
-        pos[i] = [int(face.top()/img.shape[0]*450), int(face.bottom()/img.shape[0]*450), int(face.left()/img.shape[1]*800), int(face.right()/img.shape[1]*800)]
+        pos[i] = [int(top/img.shape[0]*450), int(bottom/img.shape[0]*450), int(left/img.shape[1]*800), int(right/img.shape[1]*800)]
         landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/img.shape[1]*800))/tmp1*100
         landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/img.shape[0]*450))/tmp2*100
         landmarks[i] = landmark
@@ -123,7 +132,7 @@ from pygame.locals import *
 import random
 import sys
 ########↓↓↓追加↓↓↓####################
-screenwidth = 1000; screenheight = 800
+screenwidth = 800; screenheight = 450
 ########↑↑↑追加↑↑↑####################
 
 SCR_RECT = Rect(0, 0, screenwidth, screenheight)
@@ -245,7 +254,7 @@ def main():
     ret, frame = camera.read()
     screen.fill([0,0,0])
     Taitai=cv2.imread(r"tai.jpg")
-    Taitai =cv2.resize(Taitai,(240,320))
+    Taitai =cv2.resize(Taitai,(100,100))
     font = pygame.font.Font(None, 24)  # 経過時間表示の文字
 
 
@@ -257,14 +266,13 @@ def main():
     
     #x_offset=400
     #y_offset=600
-    score = 0
+    score = [0,0,0,0]
 
     player = [Player(),Player(),Player(),Player()]
     for i, fr in enumerate(frame):
-        fr = fr.swapaxes(0,1)
-        fr = pygame.surfarray.make_surface(fr)
-        player[i].image = fr
+        player[i].image = pygame.surfarray.make_surface(fr.swapaxes(0,1))
         player[i].init(pos[i])
+        
     #Alien.images = split_image(load_image("/Users/tanakaakira/zoomgame/data/Hamburger.png"), 2)
     #Beam.image = load_image("/Users/tanakaakira/zoomgame/data/taitai.png")
     #Taitai=cv2.imread("/Users/tanakaakira/zoomgame/data/tai.jpg")
@@ -307,30 +315,26 @@ def main():
                     group_apple_exist.remove(obj)
                     obj.exist = False
 
+            '''
             if len(landmark[0])==0:
                 landmark = [[0,0]]
+            '''
 
             for i in range(4):
-                minplot=(player[i].rect.left + np.min(landmark,axis=0)[0], player[i].rect.top + np.min(landmark,axis=0)[1])
-                maxplot=(player[i].rect.left + np.max(landmark,axis=0)[0], player[i].rect.top + np.max(landmark,axis=0)[1])
+                #minplot=(player[i].rect.left + np.min(landmark,axis=0)[0], player[i].rect.top + np.min(landmark,axis=0)[1])
+                #maxplot=(player[i].rect.left + np.max(landmark,axis=0)[0], player[i].rect.top + np.max(landmark,axis=0)[1])
                 player[i].pos_update(pos[i])
-                
-                frame[i] = frame[i].swapaxes(0,1)
-                frame[i] = pygame.surfarray.make_surface(frame[i])
+                player[i].image = pygame.surfarray.make_surface(frame[i].swapaxes(0,1))
+                screen.blit(Back_image, back_rect)
             
-            screen.blit(Back_image, back_rect)
-            for i, fr in enumerate(frame):
-                player[i].image = fr
             clock.tick(30)
 
             ###ここからaquiracheが書き直しました
-            
-            
 
             if len(group_apple_exist)>0:
                 #collision_detection(player, group_apple_exist , minplot, maxplot,screen)
-                score = score +collision_detection(player, group_apple_exist , minplot, maxplot,screen)
-                #print(score)
+                for i in range(len(frame)):
+                    score[i] = score[i] +collision_detection(player[i], group_apple_exist, landmark[i])
                 #collision_detection(player, group_apple_exist , minplot, maxplot,screen)
             group_apple_exist.update()
             all.update()
@@ -351,17 +355,17 @@ def main():
                     pygame.quit()
                     sys.exit()
             screen.blit(Back_image, back_rect)
-            
-            
 
     except (KeyboardInterrupt,SystemExit):
         pygame.quit()
         cv2.destroyAllWindows()
 
 ###ここから書き直しました
-def collision_detection(player, group_apple_exist , minplot, maxplot,screen):
+def collision_detection(player, group_apple_exist,landmark):
     """衝突判定"""
     c=0
+    minplot=(player.rect.left + np.min(landmark,axis=0)[0], player.rect.top + np.min(landmark,axis=0)[1])
+    maxplot=(player.rect.left + np.max(landmark,axis=0)[0], player.rect.top + np.max(landmark,axis=0)[1])
     for Apple in group_apple_exist:
         #print(Apple.rect.left,Apple.rect.top,c)
         if minplot[0] <= Apple.rect.left + Apple.rect.width and Apple.rect.left  <= maxplot[0] and minplot[1] <= Apple.rect.top + Apple.rect.height and Apple.rect.top <= maxplot[1]:
@@ -377,6 +381,10 @@ class Player(pygame.sprite.Sprite):
     """自機"""
     speed = 30  # 移動速度
     reload_time = 15  # リロード時間
+    def __init__(self):
+        # imageとcontainersはmain()でセット
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        #self.rect = self.image.get_rect()
     def init(self, pos):
         # imageとcontainersはmain()でセット
         #pygame.sprite.Sprite.__init__(self, self.containers)
