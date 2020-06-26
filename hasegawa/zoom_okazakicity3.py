@@ -343,8 +343,9 @@ def main():
 
             all.draw(screen)
             group_apple_exist.draw(screen)
-            text = font.render("Score:" + str(score), True, (120,0,120))
-            screen.blit(text, [900,750])
+            for i in range(len(score)):
+                text = font.render("Score:" + str(score[i]), True, (120,0,120))
+                screen.blit(text, [screenwidth * i / 4. + 10, screenheight * 0.9])
             ###ここまでaquiracheが書き直しました
             pygame.display.update()
 
