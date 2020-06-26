@@ -55,6 +55,7 @@ def face_detect_trim(img):
     #height=img.shape[0]
     #width=img.shape[1]
     
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     imgs = divide_img_4(img)
     
     trim_imgs=[[0]]*4
@@ -82,7 +83,7 @@ def face_detect_trim(img):
         right = min(face.right(), max(img.shape[0:2]))
         
         img_trim = img[top:bottom, left:right]
-        img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/img.shape[1]*800), int(img_trim.shape[0]/img.shape[0]*450)))
+        img_trim = cv2.resize(img_trim , (int(img_trim.shape[1]/img.shape[1]*screenwidth), int(img_trim.shape[0]/img.shape[0]*screenheight)))
         tmp1 = img_trim.shape[1]
         tmp2 = img_trim.shape[0]
         img_trim = cv2.resize(img_trim , (100, 100))
@@ -91,9 +92,9 @@ def face_detect_trim(img):
         
         #landmark[:,0] = landmark[:,0] - np.floor(landmark[:,0]/mag)
         #landmark[:,1] = landmark[:,1] - np.floor(landmark[:,1]/mag)
-        pos[i] = [int(top/img.shape[0]*450), int(bottom/img.shape[0]*450), int(left/img.shape[1]*800), int(right/img.shape[1]*800)]
-        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/img.shape[1]*800))/tmp1*100
-        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/img.shape[0]*450))/tmp2*100
+        pos[i] = [int(top/img.shape[0]*screenheight), int(bottom/img.shape[0]*screenheight), int(left/img.shape[1]*screenwidth), int(right/img.shape[1]*screenwidth)]
+        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0]/img.shape[1]*screenwidth))/tmp1*100
+        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1]/img.shape[0]*screenheight))/tmp2*100
         landmarks[i] = landmark
         
         # ランドマーク描画
@@ -123,7 +124,7 @@ def capture_trim():
     cv2.destroyAllWindows()
     return None
 
-camera = cv2.VideoCapture(1)
+camera = cv2.VideoCapture(2)
 import os
 
 
@@ -139,9 +140,10 @@ SCR_RECT = Rect(0, 0, screenwidth, screenheight)
 
 
 #######↓↓↓追加しました↓↓↓###########
-n_apple = 5   #リンゴの数
-n_enemy = 5   #敵の数
-gameduration = 30000    #ゲームの所要時間(ms)
+gameduration = 60000    #ゲームの所要時間(ms)
+n_apple = int(gameduration/1000)   #リンゴの数
+n_enemy = int(gameduration/1000/2)   #敵の数
+
 appleduration_min = 20000   
 appleduration_max = 21000
 v_apple = 20   #リンゴの速さ(pixel / frame)
@@ -186,7 +188,7 @@ class Apple(pygame.sprite.Sprite):
         disappeartime = min(gameduration, appeartime + np.random.randint(appleduration_min,appleduration_max))
 
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load(filename).convert_alpha()
+        self.image = pygame.transform.scale(pygame.image.load(filename).convert_alpha(),(50, 50))
         w = self.image.get_width()
         h = self.image.get_height()
         self.rect = Rect(x_init, y_init, w, h)
@@ -248,6 +250,7 @@ def main():
     ####kokomadetuika
 
     Back_image = load_image("../images/background.jpg")
+    Back_image = pygame.transform.scale(Back_image,(screenwidth, screenheight))
     back_rect = Back_image.get_rect()
     #et = camera.read()
     #frame = capture_trim()
@@ -344,7 +347,7 @@ def main():
             all.draw(screen)
             group_apple_exist.draw(screen)
             for i in range(len(score)):
-                text = font.render("Score:" + str(score[i]), True, (120,0,120))
+                text = font.render("Score:" + str(score[i]), True, (255,255,255))
                 screen.blit(text, [screenwidth * i / 4. + 10, screenheight * 0.9])
             ###ここまでaquiracheが書き直しました
             pygame.display.update()
