@@ -30,8 +30,8 @@ SCR_RECT = Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 FACE_SIZE = 100
 
-GAME_DURATION = 60000    #ゲームの継続時間(ms)
-WAITING_TIME = 2000    #オブジェクトが出現するまでの時間
+WAITING_TIME = 5000    #オブジェクトが出現するまでの時間
+GAME_DURATION = WAITING_TIME + 60000    #ゲームの継続時間(ms)
 
 n_apple = int(GAME_DURATION/1000)   #リンゴの数
 n_enemy = int(GAME_DURATION/1000/2)   #敵の数
@@ -346,6 +346,14 @@ def main():
             # updateを画面に反映
             # all.update()
             # all.draw(screen)
+
+            if time<WAITING_TIME:
+                text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-WAITING_TIME)/1000)), True, (255,255,255))
+            elif time>GAME_DURATION:
+                text = pygame.font.Font(None, 50).render("TIME: "+str(0), True, (255,255,255))
+            else:
+                text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-time)/1000+1)), True, (255,255,255))
+            screen.blit(text, [SCREEN_WIDTH*0.45, 5])
 
             for i in range(N_PLAYER):
                 text1 = pygame.font.Font(None, 24).render("Player"+str(i+1)+": " + str(score[i]), True, (255,255,255))
