@@ -228,12 +228,12 @@ def main():
     group_apple_exist = pygame.sprite.RenderUpdates()
 
     for _ in range(n_apple):
-        apple = Apple("apple.png",1)
+        apple = Apple("../images/watermelon5.png",1)
         group_apple_all.add(apple)
 
     # スプライト(敵)の追加
     for _ in range(n_enemy):
-        enemy = Apple("enemy.png",-3)
+        enemy = Apple("../images/spider-10.png",-3)
         group_apple_all.add(enemy)
 
     ######↑↑↑追加↑↑↑#############
@@ -247,13 +247,13 @@ def main():
     #Apple.containers = all
     ####kokomadetuika
 
-    Back_image = load_image("Aichi.png")
+    Back_image = load_image("../images/background.jpg")
     back_rect = Back_image.get_rect()
     #et = camera.read()
     #frame = capture_trim()
     ret, frame = camera.read()
     screen.fill([0,0,0])
-    Taitai=cv2.imread(r"tai.jpg")
+    Taitai=cv2.imread(r"../images/owl.jpg")
     Taitai =cv2.resize(Taitai,(100,100))
     font = pygame.font.Font(None, 24)  # 経過時間表示の文字
 
