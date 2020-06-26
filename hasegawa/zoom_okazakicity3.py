@@ -302,6 +302,7 @@ def main():
             frame,pos,landmark  = face_detect_trim(frame)
             for i in range(4):
                 if len(frame[i]) == 1:
+                    pos[i]=player[i].pos #顔が認識されなかったときに、前回の座標を引き継ぐ
                     frame[i] = Taitai
 
             #####↓↓↓追加↓↓↓############
@@ -398,7 +399,7 @@ class Player(pygame.sprite.Sprite):
         self.pos_prev=self.pos
         self.pos=pos
     def update(self):
-        self.rect.move_ip(self.pos[0]-self.pos_prev[0], self.pos[1]-self.pos_prev[1])
+        self.rect.move_ip(self.pos[0]-self.pos_prev[0], self.pos[2]-self.pos_prev[2])
 
 '''
 class Alien(pygame.sprite.Sprite):
