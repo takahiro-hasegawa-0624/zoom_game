@@ -240,10 +240,6 @@ def main():
     screen = pygame.display.set_mode(SCR_RECT.size)
     screen.fill([0,0,0])
 
-    font24 = pygame.font.Font(None, 24)
-    font32 = pygame.font.Font(None, 32)
-    font60 = pygame.font.Font(None, 60)
-
     # 背景初期設定 ###########################################################################################
     Back_image = load_image("../images/background.jpg")
     Back_image = pygame.transform.scale(Back_image,(SCREEN_WIDTH, SCREEN_HEIGHT))
