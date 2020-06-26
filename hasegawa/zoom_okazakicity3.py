@@ -365,15 +365,15 @@ def main():
 def collision_detection(player, group_apple_exist,landmark):
     """衝突判定"""
     c=0
-    minplot=(player.rect.left + np.min(landmark,axis=0)[0], player.rect.top + np.min(landmark,axis=0)[1])
-    maxplot=(player.rect.left + np.max(landmark,axis=0)[0], player.rect.top + np.max(landmark,axis=0)[1])
+    minplot=np.min(landmark,axis=0)
+    maxplot=np.max(landmark,axis=0)
     for Apple in group_apple_exist:
         #print(Apple.rect.left,Apple.rect.top,c)
         if minplot[0] <= Apple.rect.left + Apple.rect.width and Apple.rect.left  <= maxplot[0] and minplot[1] <= Apple.rect.top + Apple.rect.height and Apple.rect.top <= maxplot[1]:
             Apple.kill()
             #print("食べたね, えらいえらい")
             c += Apple.score
-    return c        
+    return c
 ###ここまで書き直しました
     
     
