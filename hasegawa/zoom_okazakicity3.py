@@ -399,7 +399,7 @@ class Player(pygame.sprite.Sprite):
         self.pos_prev=self.pos
         self.pos=pos
     def update(self):
-        self.rect.move_ip(self.pos[0]-self.pos_prev[0], self.pos[2]-self.pos_prev[2])
+        self.rect.move_ip(self.pos[2]-self.pos_prev[2], self.pos[0]-self.pos_prev[0])
 
 '''
 class Alien(pygame.sprite.Sprite):
