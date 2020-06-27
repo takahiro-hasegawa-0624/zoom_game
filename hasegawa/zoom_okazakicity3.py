@@ -29,16 +29,16 @@ SCREEN_HEIGHT = 450
 SCR_RECT = Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 FACE_SIZE = 100
+SPRITE_SIZE = 30
 
 WAITING_TIME = 5000    #オブジェクトが出現するまでの時間
 GAME_DURATION = WAITING_TIME + 60000    #ゲームの継続時間(ms)
 
-n_apple = int(GAME_DURATION/1000)   #リンゴの数
-n_enemy = int(GAME_DURATION/1000/2)   #敵の数
+n_apple = int(GAME_DURATION/1000/2)   #リンゴの数
+n_enemy = int(GAME_DURATION/1000/4)   #敵の数
 
-appleduration_min = 20000   
-appleduration_max = 21000
-v_apple = 20   #リンゴの速さ(pixel / frame)
+appleduration_min = 10000   
+appleduration_max = 20000
 ###################################################
 
 def divide_img_4(img):
@@ -132,7 +132,7 @@ def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*N＿PLAYER, landmarks=[[[0,
 
 class Apple(pygame.sprite.Sprite):
     # スプライトを作成(画像ファイル名, 獲得スコア)
-    def __init__(self, img, score):
+    def __init__(self, img, score, v_apple):
         # 出現方向・角度
         appeardirection = np.random.choice(['l','r','u','d'])
         theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * np.pi
@@ -175,21 +175,27 @@ class Apple(pygame.sprite.Sprite):
         self.disappeartime = disappeartime
         self.exist = False
 
-    def update(self):
+    def update(self,time):
         if self.exist:
             self.rect.move_ip(self.vx, self.vy)
         # 壁と衝突時の処理(跳ね返り)
         if self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
-            self.vx = -self.vx
+            if time>self.disappeartime:
+                self.exist = False
+                self.kill()
+            else:
+                self.vx = -self.vx
         if self.rect.top < 0 or self.rect.bottom > SCREEN_HEIGHT:
-            self.vy = -self.vy
+            if time>self.disappeartime:
+                self.exist = False
+                self.kill()
+            else:
+                self.vy = -self.vy
         # 壁と衝突時の処理(壁を超えないように)
         self.rect = self.rect.clamp(SCR_RECT)
     
 class Player(pygame.sprite.Sprite):
     """自機"""
-    speed = 30  # 移動速度
-    reload_time = 15  # リロード時間
     def __init__(self):
         pygame.sprite.Sprite.__init__(self, self.containers)
 
@@ -236,12 +242,13 @@ def main():
 
     all = pygame.sprite.RenderUpdates()
     Player.containers = all
+    #Apple.containers = all
 
     screen = pygame.display.set_mode(SCR_RECT.size)
     screen.fill([0,0,0])
 
     # 背景初期設定 ###########################################################################################
-    Back_image = load_image("../images/background.jpg")
+    Back_image = load_image("../images/background.png")
     Back_image = pygame.transform.scale(Back_image,(SCREEN_WIDTH, SCREEN_HEIGHT))
     back_rect = Back_image.get_rect()
     
@@ -250,33 +257,33 @@ def main():
     group_apple_exist = pygame.sprite.RenderUpdates()    #実際に表示されているスプライトを格納するクラス
 
     # 加点スプライト
-    apple_fig = pygame.transform.scale(pygame.image.load("../images/apple1.png").convert_alpha(),(50, 50))
+    apple_fig = pygame.transform.scale(pygame.image.load("../images/apple1.png").convert_alpha(),(30, 30))
     grape_fig = pygame.transform.scale(pygame.image.load("../images/grape3.png").convert_alpha(),(50, 50))
-    watermelon_fig = pygame.transform.scale(pygame.image.load("../images/watermelon5.png").convert_alpha(),(50, 50))
-    hamburger_fig = pygame.transform.scale(pygame.image.load("../images/hamburger10.png").convert_alpha(),(50, 50))
-    plus_sprite_list = np.array([[apple_fig,1,0.6],[grape_fig,3,0.25],[watermelon_fig,5,0.1],[hamburger_fig,10,0.05]])
+    watermelon_fig = pygame.transform.scale(pygame.image.load("../images/watermelon5.png").convert_alpha(),(60, 60))
+    hamburger_fig = pygame.transform.scale(pygame.image.load("../images/hamburger10.png").convert_alpha(),(70, 70))
+    plus_sprite_list = np.array([[0.6,apple_fig,1,15],[0.25,grape_fig,3,10],[0.1,watermelon_fig,5,5],[0.05,hamburger_fig,10,3]])
     for _ in range(n_apple):
         prob = np.random.rand()
         for j in range(len(plus_sprite_list)):
-            if prob<=plus_sprite_list[j,2]:
-                plus_sprite = Apple(plus_sprite_list[j,0],plus_sprite_list[j,1])
+            if prob<=plus_sprite_list[j,0]:
+                plus_sprite = Apple(plus_sprite_list[j,1],plus_sprite_list[j,2],plus_sprite_list[j,3])
                 break
             else:
-                prob -= plus_sprite_list[j,2]
+                prob -= plus_sprite_list[j,0]
         group_apple_all.add(plus_sprite)
 
     # 減点スプライト
-    poison_apple_fig = pygame.transform.scale(pygame.image.load("../images/poison_apple-2.png").convert_alpha(),(50, 50))
-    spider_fig = pygame.transform.scale(pygame.image.load("../images/spider-10.png").convert_alpha(),(50, 50))
-    minus_sprite_list = np.array([[poison_apple_fig,-2,0.9],[spider_fig,-10,0.1]])
+    poison_apple_fig = pygame.transform.scale(pygame.image.load("../images/poison_apple-2.png").convert_alpha(),(40, 40))
+    spider_fig = pygame.transform.scale(pygame.image.load("../images/spider-10.png").convert_alpha(),(70, 70))
+    minus_sprite_list = np.array([[0.9,poison_apple_fig,-2,10],[0.1,spider_fig,-10,40]])
     for _ in range(n_enemy):
         prob = np.random.rand()
         for j in range(len(minus_sprite_list)):
-            if prob<=minus_sprite_list[j,2]:
-                minus_sprite = Apple(minus_sprite_list[j,0],minus_sprite_list[j,1])
+            if prob<=minus_sprite_list[j,0]:
+                minus_sprite = Apple(minus_sprite_list[j,1],minus_sprite_list[j,2],minus_sprite_list[j,3])
                 break
             else:
-                prob -= minus_sprite_list[j,2]
+                prob -= minus_sprite_list[j,0]
         group_apple_all.add(minus_sprite)
 
     # 得点初期設定 ###########################################################################################
@@ -301,6 +308,7 @@ def main():
     clock = pygame.time.Clock()
     try:
         while True:
+            dirty_rect = []
             time = pygame.time.get_ticks()
 
             # 画像取得->顔認識->ゲーム画面に表示
@@ -313,8 +321,8 @@ def main():
                 player[i].image = pygame.surfarray.make_surface(frame[i].swapaxes(0,1))
                 screen.blit(Back_image, back_rect)
 
-                player[i].update()
-                player[i].containers.draw(screen)
+                #player[i].update()
+                #dirty_rect += player[i].containers.draw(screen)
 
             # スプライトの表示と消去
             for obj in group_apple_all:
@@ -324,12 +332,18 @@ def main():
                     obj.exist = True
 
                 # obj.disappeartimeになったらgroup_apple_existから消す
-                if obj.exist == True and time > obj.disappeartime:
+                if obj.exist == True and time > GAME_DURATION:
                     group_apple_exist.remove(obj)
                     obj.exist = False
             
             # 待機時間
             clock.tick(10)
+
+            # updateを画面に反映
+            all.update()
+            dirty_rect = all.draw(screen)
+            group_apple_exist.update(time)
+            dirty_rect += group_apple_exist.draw(screen)
 
             # スコアの更新
             if len(group_apple_exist)>0:
@@ -340,28 +354,25 @@ def main():
                         text = pygame.font.Font(None, 60).render(str(c), True, (255,0,0))
                         screen.blit(text, [pos[i,2]+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.3])
 
-            group_apple_exist.update()
-            group_apple_exist.draw(screen)
-
-            # updateを画面に反映
-            # all.update()
-            # all.draw(screen)
-
-            if time<WAITING_TIME:
+            # 残り時間の表示
+            if time<WAITING_TIME:    #ゲーム開始前
                 text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-WAITING_TIME)/1000)), True, (255,255,255))
-            elif time>GAME_DURATION:
+                text2 = pygame.font.Font(None, 500).render(str(int((WAITING_TIME-time)/1000)+1), True, (255,0,0))
+                screen.blit(text2, [SCREEN_WIDTH*0.4, SCREEN_HEIGHT*0.2])
+            elif time>GAME_DURATION:    #ゲーム終了後
                 text = pygame.font.Font(None, 50).render("TIME: "+str(0), True, (255,255,255))
             else:
                 text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-time)/1000+1)), True, (255,255,255))
             screen.blit(text, [SCREEN_WIDTH*0.45, 5])
 
+            # スコアの表示
             for i in range(N_PLAYER):
                 text1 = pygame.font.Font(None, 24).render("Player"+str(i+1)+": " + str(score[i]), True, (255,255,255))
-                screen.blit(text1, [SCREEN_WIDTH * i / 4. + 10, SCREEN_HEIGHT * 0.9])
+                screen.blit(text1, [SCREEN_WIDTH * i / 4. + 10, SCREEN_HEIGHT * 0.95])
                 text2 = pygame.font.Font(None, 32).render(str(score[i]), True, (255,255,255))
                 screen.blit(text2, [pos[i,2]+FACE_SIZE*0.4, pos[i,0]+FACE_SIZE*0.1])
 
-            pygame.display.update()
+            pygame.display.update(dirty_rect)
 
             for event in pygame.event.get():
                 if event.type == QUIT:
