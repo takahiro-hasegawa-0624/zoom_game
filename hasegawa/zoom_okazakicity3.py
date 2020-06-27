@@ -34,11 +34,11 @@ SPRITE_SIZE = 30
 WAITING_TIME = 5000    #オブジェクトが出現するまでの時間
 GAME_DURATION = WAITING_TIME + 60000    #ゲームの継続時間(ms)
 
-n_apple = int(GAME_DURATION/1000/2)   #リンゴの数
-n_enemy = int(GAME_DURATION/1000/4)   #敵の数
+N_FOOD = int(GAME_DURATION/1000/2)   #リンゴの数
+N_ENEMY = int(GAME_DURATION/1000/4)   #敵の数
 
-appleduration_min = 10000   
-appleduration_max = 20000
+spriteduration_min = 10000   
+spriteduration_max = 20000
 ###################################################
 
 def divide_img_4(img):
@@ -130,14 +130,14 @@ def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*N＿PLAYER, landmarks=[[[0,
 
     return trim_imgs, np.array(pos), np.array(landmarks)
 
-class Apple(pygame.sprite.Sprite):
+class Food(pygame.sprite.Sprite):
     # スプライトを作成(画像ファイル名, 獲得スコア)
-    def __init__(self, img, score, v_apple):
+    def __init__(self, img, score, v):
         # 出現方向・角度
         appeardirection = np.random.choice(['l','r','u','d'])
         theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * np.pi
-        vx_init = v_apple * np.cos(theta)
-        vy_init = v_apple * np.sin(theta)
+        vx_init = v * np.cos(theta)
+        vy_init = v * np.sin(theta)
         
         # オブジェクトの得点
         self.score = score
@@ -162,7 +162,7 @@ class Apple(pygame.sprite.Sprite):
         # 出現時刻
         appeartime = np.random.randint(WAITING_TIME, GAME_DURATION)
         # 消滅時刻　　　　
-        disappeartime = min(GAME_DURATION, appeartime + np.random.randint(appleduration_min,appleduration_max))
+        disappeartime = min(GAME_DURATION, appeartime + np.random.randint(spriteduration_min,spriteduration_max))
 
         pygame.sprite.Sprite.__init__(self)
         self.image = img
@@ -211,17 +211,17 @@ class Player(pygame.sprite.Sprite):
         self.rect.top = self.pos[0]
         self.rect.left = self.pos[2]
 
-def collision_detection(player, group_apple_exist,landmark):
+def collision_detection(player, group_sprite_exist,landmark):
     """衝突判定"""
     c=0
     minplot=np.min(landmark,axis=0)
     maxplot=np.max(landmark,axis=0)
     is_hit = False
-    for Apple in group_apple_exist:
-        if minplot[0] <= Apple.rect.left + Apple.rect.width and Apple.rect.left  <= maxplot[0] and minplot[1] <= Apple.rect.top + Apple.rect.height and Apple.rect.top <= maxplot[1]:
-            Apple.kill()
+    for Sprite in group_sprite_exist:
+        if minplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= maxplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
+            Sprite.kill()
             is_hit = True
-            c += Apple.score
+            c += Sprite.score
     return c, is_hit
 
 def load_image(filename, colorkey=None):
@@ -252,8 +252,8 @@ def main():
     back_rect = Back_image.get_rect()
     
     # スプライト初期設定 ###########################################################################################
-    group_apple_all = pygame.sprite.RenderUpdates()    #ゲーム中に表示する全てのスプライトを格納するクラス
-    group_apple_exist = pygame.sprite.RenderUpdates()    #実際に表示されているスプライトを格納するクラス
+    group_sprite_all = pygame.sprite.RenderUpdates()    #ゲーム中に表示する全てのスプライトを格納するクラス
+    group_sprite_exist = pygame.sprite.RenderUpdates()    #実際に表示されているスプライトを格納するクラス
 
     # 加点スプライト
     apple_fig = pygame.transform.scale(pygame.image.load("../images/apple1.png").convert_alpha(),(30, 30))
@@ -261,29 +261,31 @@ def main():
     watermelon_fig = pygame.transform.scale(pygame.image.load("../images/watermelon5.png").convert_alpha(),(60, 60))
     hamburger_fig = pygame.transform.scale(pygame.image.load("../images/hamburger10.png").convert_alpha(),(70, 70))
     plus_sprite_list = np.array([[0.6,apple_fig,1,15],[0.25,grape_fig,3,10],[0.1,watermelon_fig,5,5],[0.05,hamburger_fig,10,3]])
-    for _ in range(n_apple):
+    '''plus_sprite_list[food] = [probability, figure, score, speed]'''
+    for _ in range(N_FOOD):
         prob = np.random.rand()
         for j in range(len(plus_sprite_list)):
             if prob<=plus_sprite_list[j,0]:
-                plus_sprite = Apple(plus_sprite_list[j,1],plus_sprite_list[j,2],plus_sprite_list[j,3])
+                plus_sprite = Food(plus_sprite_list[j,1],plus_sprite_list[j,2],plus_sprite_list[j,3])
                 break
             else:
                 prob -= plus_sprite_list[j,0]
-        group_apple_all.add(plus_sprite)
+        group_sprite_all.add(plus_sprite)
 
     # 減点スプライト
     poison_apple_fig = pygame.transform.scale(pygame.image.load("../images/poison_apple-2.png").convert_alpha(),(40, 40))
     spider_fig = pygame.transform.scale(pygame.image.load("../images/spider-10.png").convert_alpha(),(70, 70))
-    minus_sprite_list = np.array([[0.9,poison_apple_fig,-2,10],[0.1,spider_fig,-10,40]])
-    for _ in range(n_enemy):
+    minus_sprite_list = np.array([[0.8,poison_apple_fig,-2,10],[0.2,spider_fig,-10,40]])
+    '''minus_sprite_list[food] = [probability, figure, score, speed]'''
+    for _ in range(N_ENEMY):
         prob = np.random.rand()
         for j in range(len(minus_sprite_list)):
             if prob<=minus_sprite_list[j,0]:
-                minus_sprite = Apple(minus_sprite_list[j,1],minus_sprite_list[j,2],minus_sprite_list[j,3])
+                minus_sprite = Food(minus_sprite_list[j,1],minus_sprite_list[j,2],minus_sprite_list[j,3])
                 break
             else:
                 prob -= minus_sprite_list[j,0]
-        group_apple_all.add(minus_sprite)
+        group_sprite_all.add(minus_sprite)
 
     # 得点初期設定 ###########################################################################################
     score = np.zeros(N_PLAYER, np.int8)
@@ -324,15 +326,15 @@ def main():
                 #dirty_rect += player[i].containers.draw(screen)
 
             # スプライトの表示と消去
-            for obj in group_apple_all:
-                # obj.appeartimeになったらgroup_apple_existに入れる
+            for obj in group_sprite_all:
+                # obj.appeartimeになったらgroup_sprite_existに入れる
                 if obj.exist == False and time >= obj.appeartime:
-                    group_apple_exist.add(obj)
+                    group_sprite_exist.add(obj)
                     obj.exist = True
 
-                # obj.disappeartimeになったらgroup_apple_existから消す
+                # obj.disappeartimeになったらgroup_sprite_existから消す
                 if obj.exist == True and time > GAME_DURATION:
-                    group_apple_exist.remove(obj)
+                    group_sprite_exist.remove(obj)
                     obj.exist = False
             
             # 待機時間
@@ -341,13 +343,13 @@ def main():
             # updateを画面に反映
             all.update()
             dirty_rect = all.draw(screen)
-            group_apple_exist.update(time)
-            dirty_rect += group_apple_exist.draw(screen)
+            group_sprite_exist.update(time)
+            dirty_rect += group_sprite_exist.draw(screen)
 
             # スコアの更新
-            if len(group_apple_exist)>0:
+            if len(group_sprite_exist)>0:
                 for i in range(N_PLAYER):
-                    c, is_hit =collision_detection(player[i], group_apple_exist, landmark[i])
+                    c, is_hit =collision_detection(player[i], group_sprite_exist, landmark[i])
                     score[i] = score[i] + c
                     if is_hit:
                         text = pygame.font.Font(None, 60).render(str(c), True, (255,0,0))
