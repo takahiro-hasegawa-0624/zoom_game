@@ -100,8 +100,8 @@ def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*N＿PLAYER, landmarks=[[[0,
 
         if len(faces)==0:
             trim_imgs[i] = error_img[i]
-            continue # 顔が検出されない場合は処理を打ち切る
-        face = faces[0] # 顔が複数検出された場合には、先頭を採用
+            continue    #顔が検出されない場合は処理を打ち切る
+        face = faces[0]    #顔が複数検出された場合には、先頭を採用
     
         # 顔のランドマーク検出
         landmark = face_predictor(img_gry, face)
@@ -116,13 +116,13 @@ def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*N＿PLAYER, landmarks=[[[0,
         
         img_trim = img[top:bottom, left:right]
 
-        height_trim = int(img_trim.shape[0]/height*SCREEN_HEIGHT) #ゲーム画面の縮尺に合わせて拡大
-        width_trim = int(img_trim.shape[1]/width*SCREEN_WIDTH) #ゲーム画面の縮尺に合わせて拡大
+        height_trim = int(img_trim.shape[0]/height*SCREEN_HEIGHT)    #ゲーム画面の縮尺に合わせて拡大
+        width_trim = int(img_trim.shape[1]/width*SCREEN_WIDTH)    #ゲーム画面の縮尺に合わせて拡大
 
-        img_trim = cv2.resize(img_trim , (FACE_SIZE, FACE_SIZE)) #プレイヤーの画像サイズは100*100に固定
+        img_trim = cv2.resize(img_trim , (FACE_SIZE, FACE_SIZE))    #プレイヤーの画像サイズは100*100に固定
         trim_imgs[i] = img_trim
 
-        pos[i] = [int(top / height * SCREEN_HEIGHT), int(bottom / height * SCREEN_HEIGHT), int(left / width * SCREEN_WIDTH), int(right / width * SCREEN_WIDTH)] #ゲーム画面の縮尺に合わせて拡大
+        pos[i] = [int(top / height * SCREEN_HEIGHT), int(bottom / height * SCREEN_HEIGHT), int(left / width * SCREEN_WIDTH), int(right / width * SCREEN_WIDTH)]    #ゲーム画面の縮尺に合わせて拡大
 
         landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0] / width * SCREEN_WIDTH)) / width_trim * FACE_SIZE
         landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1] / height * SCREEN_HEIGHT)) / height_trim * FACE_SIZE
