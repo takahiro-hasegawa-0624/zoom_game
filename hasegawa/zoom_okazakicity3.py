@@ -242,7 +242,6 @@ def main():
 
     all = pygame.sprite.RenderUpdates()
     Player.containers = all
-    #Apple.containers = all
 
     screen = pygame.display.set_mode(SCR_RECT.size)
     screen.fill([0,0,0])
