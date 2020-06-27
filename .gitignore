@@ -399,3 +399,6 @@ MigrationBackup/
 # CMacke
 CMakeLists.txt
 cmake-build-debug
+
+
+venv/

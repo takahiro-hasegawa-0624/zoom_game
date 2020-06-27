@@ -1,5 +1,7 @@
 # basic
-# -*- coding: utf-8 -*-
+import os
+import sys
+import random
 import numpy as np
 
 # face recognition
@@ -7,134 +9,163 @@ import dlib
 from imutils import face_utils
 import cv2
 
-########↓↓↓追加↓↓↓####################
-import math
-########↑↑↑追加↑↑↑####################
-
-face_detector = dlib.get_frontal_face_detector()
-predictor_path = '/Users/tanakaakira/zoom_game-hasegawa/hasegawa/shape_predictor_68_face_landmarks.dat'
-face_predictor = dlib.shape_predictor(predictor_path)
-
-# https://qiita.com/mamon/items/bb2334eef596f8cacd9b
-# https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
-#https://woraise.com/2019/03/21/desert-shooting/
-#https://gist.github.com/radames/1e7c794842755683162b
-
-def face_detect_trim(img):
-    # 顔検出
-    img_gry = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    faces = face_detector(img_gry, 1)
-
-    pos = [0,0,0,0]
-    landmark = [[]]
-    # 検出した全顔に対して処理
-    for face in faces:
-        # 顔のランドマーク検出
-        landmark = face_predictor(img_gry, face)
-        # 処理高速化のためランドマーク群をNumPy配列に変換(必須)
-        landmark = face_utils.shape_to_np(landmark)[60:68]
-
-        img = img[face.top():face.bottom(), face.left():face.right()]
-        #cv2.rectangle(img, tuple([face.left(),face.top()]), tuple([face.right(),face.bottom()]), (0, 0,255), thickness=2)
-        
-        landmark[:,0] -= face.left()
-        landmark[:,1] -= face.top()
-        pos.append([face.top(),face.bottom(),face.left(),face.right()])
-
-        #print(type(img))
-
-        # ランドマーク描画
-        for (x, y) in landmark:
-            cv2.circle(img, (x, y), 3, (0, 0, 255), -1)
-
-        break
-    return img, pos, landmark
-
-def capture_trim():
-    # カメラ画像の表示 ('q'入力で終了)
-    cap = cv2.VideoCapture(0)
-    while(True):
-        ret, img = cap.read()
-
-        # 顔のランドマーク検出(2.の関数呼び出し)
-        img,_,_ = face_detect_trim(img)
-
-        # 結果の表示
-        cv2.imshow('img', cv2.resize(img , (int(img.shape[1]*2), int(img.shape[0]*2))))
-
-        # 'q'が入力されるまでループ
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # 後処理
-    cap.release()
-    cv2.destroyAllWindows()
-    return None
-
-camera = cv2.VideoCapture(0)
-import os
-
-
+# game
 import pygame
 from pygame.locals import *
-import random
-import sys
-########↓↓↓追加↓↓↓####################
-screenwidth = 800; screenheight = 450
-########↑↑↑追加↑↑↑####################
 
-SCR_RECT = Rect(0, 0, 1000, 800)
+# dlib学習済みモデル
+face_detector = dlib.get_frontal_face_detector()
+predictor_path = 'shape_predictor_68_face_landmarks.dat'
+face_predictor = dlib.shape_predictor(predictor_path)
 
+###################################################
+# グローバル変数
+camera = cv2.VideoCapture(2)    #カメラのポート番号
 
-#######↓↓↓追加しました↓↓↓###########
-n_apple = 5   #リンゴの数
-n_enemy = 5   #敵の数
-gameduration = 30000    #ゲームの所要時間(ms)
+N_PLAYER = 4    #プレイヤー数
+
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 450
+SCR_RECT = Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+
+FACE_SIZE = 100
+
+WAITING_TIME = 5000    #オブジェクトが出現するまでの時間
+GAME_DURATION = WAITING_TIME + 60000    #ゲームの継続時間(ms)
+
+n_apple = int(GAME_DURATION/1000)   #リンゴの数
+n_enemy = int(GAME_DURATION/1000/2)   #敵の数
+
 appleduration_min = 20000   
 appleduration_max = 21000
 v_apple = 20   #リンゴの速さ(pixel / frame)
+###################################################
 
-enemyduration_min = 20000   
-enemyduration_max = 21000
-v_enemy = 40   #敵の速さ(pixel / frame)
+def divide_img_4(img):
+    '''
+    画像を縦2つ×横2つに4分割。[左上, 右上, 左下, 右下]の順に格納した配列を返す。
 
-# リンゴおよび敵のクラス
+    Parameters
+    ----------
+    img : np.ndarray : img[height, width, color]
+        画像
+
+    Returns
+    -------
+    imgs : list : imgs[area] = [height, width, color]
+        縦2つ×横2つに4分割した画像。[左上・右上・左下・右下]の順に格納されている。
+    '''
+    height=img.shape[0]
+    width=img.shape[1]
+    return np.array([img[:int(height*0.5), :int(width*0.5)], img[:int(height*0.5), int(width*0.5):], img[int(height*0.5):, :int(width*0.5)], img[int(height*0.5):, int(width*0.5):]])
+
+
+# https://qiita.com/mamon/items/bb2334eef596f8cacd9b
+# https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
+# https://woraise.com/2019/03/21/desert-shooting/
+# https://gist.github.com/radames/1e7c794842755683162b
+def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*N＿PLAYER, landmarks=[[[0,0]]]*N＿PLAYER):
+    '''
+    左上・右上・左下・右下に4人が写っている画像から、4人の顔をトリミングし、顔の座標と口の座標を計算する
+
+    Parameters
+    ----------
+    img : np.ndarray : img[height, width, color]
+        画像
+    error_img : np.ndarray : img[player] = [height, width, color]
+        顔が認識されない場合に挿入する画像
+
+    Returns
+    -------
+    imgs : list : imgs[player] = [height, width, color]
+        顔の部分をトリミングした画像。(左上の人・右上の人・左下の人・右下の人)の順に格納されている。
+    pos : np.array : pos[player] = [top, bottom, left, right]
+        4分割したそれぞれの画像の左上を原点とした、トリミングした画像の座標が格納されている。
+    landmarks : np.array : landmark[player] = [landmarks, position]
+        4分割したそれぞれの画像の左上を原点とした、口の座標が格納されている。
+    '''
+    
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    imgs = divide_img_4(img)
+    
+    trim_imgs=[[0]]*N＿PLAYER
+    
+    for i, img in enumerate(imgs):
+        height = img.shape[0]
+        width = img.shape[1]
+
+        # 顔検出
+        img_gry = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        faces = face_detector(img_gry, 1)
+
+        if len(faces)==0:
+            trim_imgs[i] = error_img[i]
+            continue # 顔が検出されない場合は処理を打ち切る
+        face = faces[0] # 顔が複数検出された場合には、先頭を採用
+    
+        # 顔のランドマーク検出
+        landmark = face_predictor(img_gry, face)
+        # 処理高速化のためランドマーク群をNumPy配列に変換
+        landmark = face_utils.shape_to_np(landmark)[60:68]
+
+        # 枠外の座標を丸める
+        top = max(face.top(), 0)
+        bottom = min(face.bottom(), img.shape[0])
+        left = max(face.left(), 0)
+        right = min(face.right(), img.shape[1])
+        
+        img_trim = img[top:bottom, left:right]
+
+        height_trim = int(img_trim.shape[0]/height*SCREEN_HEIGHT) #ゲーム画面の縮尺に合わせて拡大
+        width_trim = int(img_trim.shape[1]/width*SCREEN_WIDTH) #ゲーム画面の縮尺に合わせて拡大
+
+        img_trim = cv2.resize(img_trim , (FACE_SIZE, FACE_SIZE)) #プレイヤーの画像サイズは100*100に固定
+        trim_imgs[i] = img_trim
+
+        pos[i] = [int(top / height * SCREEN_HEIGHT), int(bottom / height * SCREEN_HEIGHT), int(left / width * SCREEN_WIDTH), int(right / width * SCREEN_WIDTH)] #ゲーム画面の縮尺に合わせて拡大
+
+        landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0] / width * SCREEN_WIDTH)) / width_trim * FACE_SIZE
+        landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1] / height * SCREEN_HEIGHT)) / height_trim * FACE_SIZE
+        landmarks[i] = landmark
+
+    return trim_imgs, np.array(pos), np.array(landmarks)
+
 class Apple(pygame.sprite.Sprite):
     # スプライトを作成(画像ファイル名, 獲得スコア)
-    def __init__(self, filename, score):
-        #出現方向
+    def __init__(self, img, score):
+        # 出現方向・角度
         appeardirection = np.random.choice(['l','r','u','d'])
-        ###ここからaquiracheが書き直しました
+        theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * np.pi
+        vx_init = v_apple * np.cos(theta)
+        vy_init = v_apple * np.sin(theta)
+        
+        # オブジェクトの得点
         self.score = score
-        ###ここまでaquiracheが書き直しました
-        theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * math.pi
-        vx_init = v_apple * math.cos(theta)
-        vy_init = v_apple * math.sin(theta)
 
-        #初期位置と初速
+        # 初期位置と初速
         if appeardirection =='u':
-            x_init = np.random.randint(0,screenwidth)
+            x_init = np.random.randint(0,SCREEN_WIDTH)
             y_init = 0
         elif appeardirection == 'd':
-            x_init = np.random.randint(0,screenwidth)
-            y_init = screenheight
+            x_init = np.random.randint(0,SCREEN_WIDTH)
+            y_init = SCREEN_HEIGHT
             vy_init = -vy_init
         elif appeardirection == 'l':
             x_init = 0
-            y_init = np.random.randint(0,screenheight)
+            y_init = np.random.randint(0,SCREEN_HEIGHT)
             vx_init,vy_init = vy_init,vx_init
         else:
-            x_init = screenwidth
-            y_init = np.random.randint(0,screenheight)
+            x_init = SCREEN_WIDTH
+            y_init = np.random.randint(0,SCREEN_HEIGHT)
             vx_init,vy_init = -vy_init,vx_init
 
-        #出現時刻
-        appeartime = np.random.randint(2000,gameduration)
-        #消滅時刻　　　　
-        disappeartime = min(gameduration, appeartime + np.random.randint(appleduration_min,appleduration_max))
+        # 出現時刻
+        appeartime = np.random.randint(WAITING_TIME, GAME_DURATION)
+        # 消滅時刻　　　　
+        disappeartime = min(GAME_DURATION, appeartime + np.random.randint(appleduration_min,appleduration_max))
 
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load(filename).convert_alpha()
+        self.image = img
         w = self.image.get_width()
         h = self.image.get_height()
         self.rect = Rect(x_init, y_init, w, h)
@@ -148,146 +179,188 @@ class Apple(pygame.sprite.Sprite):
         if self.exist:
             self.rect.move_ip(self.vx, self.vy)
         # 壁と衝突時の処理(跳ね返り)
-        if self.rect.left < 0 or self.rect.right > screenwidth:
+        if self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
             self.vx = -self.vx
-        if self.rect.top < 0 or self.rect.bottom > screenheight:
+        if self.rect.top < 0 or self.rect.bottom > SCREEN_HEIGHT:
             self.vy = -self.vy
         # 壁と衝突時の処理(壁を超えないように)
         self.rect = self.rect.clamp(SCR_RECT)
-#######↑↑↑追加しました↑↑↑###########
+    
+class Player(pygame.sprite.Sprite):
+    """自機"""
+    speed = 30  # 移動速度
+    reload_time = 15  # リロード時間
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self, self.containers)
+
+    def init(self, pos):
+        self.rect = self.image.get_rect()
+        self.rect.top = pos[0]
+        self.rect.left = pos[2]
+        self.reload_timer = 0
+        self.pos=pos
+    def pos_update(self,pos):
+        self.pos=pos
+    def update(self):
+        self.rect.top = self.pos[0]
+        self.rect.left = self.pos[2]
+
+def collision_detection(player, group_apple_exist,landmark):
+    """衝突判定"""
+    c=0
+    minplot=np.min(landmark,axis=0)
+    maxplot=np.max(landmark,axis=0)
+    is_hit = False
+    for Apple in group_apple_exist:
+        if minplot[0] <= Apple.rect.left + Apple.rect.width and Apple.rect.left  <= maxplot[0] and minplot[1] <= Apple.rect.top + Apple.rect.height and Apple.rect.top <= maxplot[1]:
+            Apple.kill()
+            is_hit = True
+            c += Apple.score
+    return c, is_hit
+
+def load_image(filename, colorkey=None):
+    """画像をロードして画像と矩形を返す"""
+    #filename = os.path.join("data", filename)
+    try:
+        image = pygame.image.load(filename)
+    except pygame.error as message:
+        print("Cannot load image:", filename)
+        raise SystemExit(message)
+    image = image.convert_alpha()
+    return image
 
 def main():
+    # pygame初期設定 ###########################################################################################
     pygame.init()
-    screen = pygame.display.set_mode(SCR_RECT.size)
-    pygame.display.set_caption("nankadasu")
+    pygame.display.set_caption("meal_time")
+
     all = pygame.sprite.RenderUpdates()
-    #aliens = pygame.sprite.Group()  # エイリアングループ
-    #beams = pygame.sprite.Group()   # ビームグループ
-
-    ######↓↓↓追加↓↓↓###########
-    # 全てのスプライトが入ったスプライトグループの作成
-    group_apple_all = pygame.sprite.RenderUpdates()
-
-    # 画面上に表示されているスプライトからなるグループ
-    # ゲーム画面に表示するのはこっち
-    
-    #Texts = pygame.sprite.RenderUpdates()
-    # スプライト(リンゴ)の追加
-    group_apple_exist = pygame.sprite.RenderUpdates()
-
-    for _ in range(n_apple):
-        apple = Apple("/Users/tanakaakira/zoomgame/data/apple.png",1)
-        group_apple_all.add(apple)
-
-    # スプライト(敵)の追加
-    for _ in range(n_enemy):
-        enemy = Apple("/Users/tanakaakira/zoomgame/data/enemy.png",-3)
-        group_apple_all.add(enemy)
-
-    ######↑↑↑追加↑↑↑#############
-
     Player.containers = all
-    #Beam.containers = all, beams
-    #Alien.containers = all, aliens
 
-
-    ####kokokaratuika
-    #Apple.containers = all
-    ####kokomadetuika
-
-    Back_image = load_image("/Users/tanakaakira/zoomgame/data/Aichi.png")
-    back_rect = Back_image.get_rect()
-    #et = camera.read()
-    #frame = capture_trim()
-    ret, frame = camera.read()
+    screen = pygame.display.set_mode(SCR_RECT.size)
     screen.fill([0,0,0])
-    Taitai=cv2.imread(r"/Users/tanakaakira/zoomgame/data/tai.jpg")
 
-    if type(face_detect_trim(frame)) is tuple:
-        frame,_,_  = face_detect_trim(frame)
-        _,_,landmark = face_detect_trim(frame)
-    else:
-        frame = Taitai
-        landmark = [[0,0]]
+    # 背景初期設定 ###########################################################################################
+    Back_image = load_image("../images/background.jpg")
+    Back_image = pygame.transform.scale(Back_image,(SCREEN_WIDTH, SCREEN_HEIGHT))
+    back_rect = Back_image.get_rect()
     
-    #x_offset=400
-    #y_offset=600
-    score = 0
+    # スプライト初期設定 ###########################################################################################
+    group_apple_all = pygame.sprite.RenderUpdates()    #ゲーム中に表示する全てのスプライトを格納するクラス
+    group_apple_exist = pygame.sprite.RenderUpdates()    #実際に表示されているスプライトを格納するクラス
 
-    frame = frame.swapaxes(0,1)
-    frame = pygame.surfarray.make_surface(frame)
-    Player.image = frame
-    #Alien.images = split_image(load_image("/Users/tanakaakira/zoomgame/data/Hamburger.png"), 2)
-    #Beam.image = load_image("/Users/tanakaakira/zoomgame/data/taitai.png")
-    #Taitai=cv2.imread("/Users/tanakaakira/zoomgame/data/tai.jpg")
-    Taitai =cv2.resize(Taitai,(240,320))
-    player = Player()
-    #Alien((50,30))
+    # 加点スプライト
+    apple_fig = pygame.transform.scale(pygame.image.load("../images/apple1.png").convert_alpha(),(50, 50))
+    grape_fig = pygame.transform.scale(pygame.image.load("../images/grape3.png").convert_alpha(),(50, 50))
+    watermelon_fig = pygame.transform.scale(pygame.image.load("../images/watermelon5.png").convert_alpha(),(50, 50))
+    hamburger_fig = pygame.transform.scale(pygame.image.load("../images/hamburger10.png").convert_alpha(),(50, 50))
+    plus_sprite_list = np.array([[apple_fig,1,0.6],[grape_fig,3,0.25],[watermelon_fig,5,0.1],[hamburger_fig,10,0.05]])
+    for _ in range(n_apple):
+        prob = np.random.rand()
+        for j in range(len(plus_sprite_list)):
+            if prob<=plus_sprite_list[j,2]:
+                plus_sprite = Apple(plus_sprite_list[j,0],plus_sprite_list[j,1])
+                break
+            else:
+                prob -= plus_sprite_list[j,2]
+        group_apple_all.add(plus_sprite)
+
+    # 減点スプライト
+    poison_apple_fig = pygame.transform.scale(pygame.image.load("../images/poison_apple-2.png").convert_alpha(),(50, 50))
+    spider_fig = pygame.transform.scale(pygame.image.load("../images/spider-10.png").convert_alpha(),(50, 50))
+    minus_sprite_list = np.array([[poison_apple_fig,-2,0.9],[spider_fig,-10,0.1]])
+    for _ in range(n_enemy):
+        prob = np.random.rand()
+        for j in range(len(minus_sprite_list)):
+            if prob<=minus_sprite_list[j,2]:
+                minus_sprite = Apple(minus_sprite_list[j,0],minus_sprite_list[j,1])
+                break
+            else:
+                prob -= minus_sprite_list[j,2]
+        group_apple_all.add(minus_sprite)
+
+    # 得点初期設定 ###########################################################################################
+    score = np.zeros(N_PLAYER, np.int8)
+
+    # プレイヤー初期設定 ###########################################################################################
+    # 顔認識に失敗した際に表示する画像
+    error_img = cv2.resize(cv2.imread("../images/owl.jpg"), (FACE_SIZE,FACE_SIZE))
+
+    _, frame = camera.read()    #カメラ画像取得
+    frame,pos,landmark = face_detect_trim(frame, [error_img]*N_PLAYER)
+    
+    player = []
+    for i in range(N_PLAYER):
+        player.append(Player())
+
+    for i, fr in enumerate(frame):
+        player[i].image = pygame.surfarray.make_surface(fr.swapaxes(0,1))
+        player[i].init(pos[i])
+        
+    # 終了コマンドまでゲームを継続 ###########################################################################################
     clock = pygame.time.Clock()
     try:
         while True:
             time = pygame.time.get_ticks()
-            #ret = camera.read()
-            #frame = capture_trim()
-            ret, frame = camera.read()
-            screen.fill([0,0,0])
-            
-            '''
-            if type(face_detect_trim(frame)) is tuple:
-                frame,_,_  = face_detect_trim(frame)
-                _,_,landmark = face_detect_trim(frame)
-            else:
-                frame = Taitai
-                landmark = [[0,0]]
-            '''
-            
-            frame,_,landmark  = face_detect_trim(frame)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            #####↓↓↓追加↓↓↓############
+            # 画像取得->顔認識->ゲーム画面に表示
+            prev_frame = frame
+            _, frame = camera.read()
+            frame, pos, landmark  = face_detect_trim(frame, prev_frame, pos, list(landmark))
+            for i in range(N_PLAYER):
+                player[i].pos_update(pos[i])
+
+                player[i].image = pygame.surfarray.make_surface(frame[i].swapaxes(0,1))
+                screen.blit(Back_image, back_rect)
+
+                player[i].update()
+                player[i].containers.draw(screen)
+
+            # スプライトの表示と消去
             for obj in group_apple_all:
-                    # obj.appeartimeになったらgroup_apple_existに入れる
+                # obj.appeartimeになったらgroup_apple_existに入れる
                 if obj.exist == False and time >= obj.appeartime:
                     group_apple_exist.add(obj)
                     obj.exist = True
+
                 # obj.disappeartimeになったらgroup_apple_existから消す
                 if obj.exist == True and time > obj.disappeartime:
                     group_apple_exist.remove(obj)
                     obj.exist = False
-
-            if len(landmark[0])==0:
-                landmark = [[0,0]]
-
-
-            minplot=(player.rect.left + np.min(landmark,axis=0)[0], player.rect.top + np.min(landmark,axis=0)[1])
-            maxplot=(player.rect.left + np.max(landmark,axis=0)[0], player.rect.top + np.max(landmark,axis=0)[1])
             
-            
-            frame = frame.swapaxes(0,1)
-            frame = pygame.surfarray.make_surface(frame)
-            
-            screen.blit(Back_image, back_rect)
-            Player.image = frame
-            clock.tick(5)
+            # 待機時間
+            clock.tick(10)
 
-            ###ここからaquiracheが書き直しました
-            
-            
-
+            # スコアの更新
             if len(group_apple_exist)>0:
-                #collision_detection(player, group_apple_exist , minplot, maxplot,screen)
-                score = score +collision_detection(player, group_apple_exist , minplot, maxplot,screen)
-                #print(score)
-                #collision_detection(player, group_apple_exist , minplot, maxplot,screen)
-            
-            group_apple_exist.update()
-            all.update()
-            
+                for i in range(N_PLAYER):
+                    c, is_hit =collision_detection(player[i], group_apple_exist, landmark[i])
+                    score[i] = score[i] + c
+                    if is_hit:
+                        text = pygame.font.Font(None, 60).render(str(c), True, (255,0,0))
+                        screen.blit(text, [pos[i,2]+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.3])
 
-            all.draw(screen)
+            group_apple_exist.update()
             group_apple_exist.draw(screen)
 
-            ###ここまでaquiracheが書き直しました
+            # updateを画面に反映
+            # all.update()
+            # all.draw(screen)
+
+            if time<WAITING_TIME:
+                text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-WAITING_TIME)/1000)), True, (255,255,255))
+            elif time>GAME_DURATION:
+                text = pygame.font.Font(None, 50).render("TIME: "+str(0), True, (255,255,255))
+            else:
+                text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-time)/1000+1)), True, (255,255,255))
+            screen.blit(text, [SCREEN_WIDTH*0.45, 5])
+
+            for i in range(N_PLAYER):
+                text1 = pygame.font.Font(None, 24).render("Player"+str(i+1)+": " + str(score[i]), True, (255,255,255))
+                screen.blit(text1, [SCREEN_WIDTH * i / 4. + 10, SCREEN_HEIGHT * 0.9])
+                text2 = pygame.font.Font(None, 32).render(str(score[i]), True, (255,255,255))
+                screen.blit(text2, [pos[i,2]+FACE_SIZE*0.4, pos[i,0]+FACE_SIZE*0.1])
+
             pygame.display.update()
 
             for event in pygame.event.get():
@@ -297,132 +370,10 @@ def main():
                 elif event.type == KEYDOWN and event.key == K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-            screen.blit(Back_image, back_rect)
-            
-            font = pygame.font.Font(None, 24)
-            
 
     except (KeyboardInterrupt,SystemExit):
         pygame.quit()
         cv2.destroyAllWindows()
 
-###ここから書き直しました
-def collision_detection(player, group_apple_exist , minplot, maxplot,screen):
-    """衝突判定"""
-    c=0
-    for Apple in group_apple_exist:
-        c+=1
-        #print(Apple.rect.left,Apple.rect.top,c)
-        if minplot[0] <= Apple.rect.left + Apple.rect.width and Apple.rect.left  <= maxplot[0] and minplot[1] <= Apple.rect.top + Apple.rect.height and Apple.rect.top <= maxplot[1]:
-            Apple.kill()
-            #print("食べたね, えらいえらい")
-            return Apple.score
-    return 0        
-###ここまで書き直しました
-    
-    
-
-class Player(pygame.sprite.Sprite):
-    """自機"""
-    speed = 50  # 移動速度
-    reload_time = 15  # リロード時間
-    def __init__(self):
-        # imageとcontainersはmain()でセット
-        pygame.sprite.Sprite.__init__(self, self.containers)
-        self.rect = self.image.get_rect()
-        self.rect.bottom = SCR_RECT.bottom  # プレイヤーが画面の一番下
-        self.reload_timer = 0
-    def update(self):
-        # 押されているキーをチェック
-        pressed_keys = pygame.key.get_pressed()
-        # 押されているキーに応じてプレイヤーを移動
-        if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-self.speed, 0)
-        elif pressed_keys[K_RIGHT]:
-            self.rect.move_ip(self.speed, 0)
-        elif pressed_keys[K_UP]:
-            self.rect.move_ip(0, -self.speed)
-        elif pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, self.speed)
-        #self.rect.clamp_ip(SCR_RECT)
-
-'''
-class Alien(pygame.sprite.Sprite):
-    """エイリアン"""
-    speed = 50  # 移動速度
-    animcycle = 50  # アニメーション速度
-    frame = 0
-    move_width = 700  # 横方向の移動範囲
-    prob_beam = 0.3  # ビームを発射する確率
-    def __init__(self, pos):
-        # imagesとcontainersはmain()でセット
-        pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = self.images[0]
-        self.rect = self.image.get_rect()
-        self.rect.center = pos
-        self.left = pos[0]  # 移動できる左端
-        self.right = self.left + self.move_width  # 移動できる右端
-    def update(self):
-        # 横方向への移動
-        self.rect.move_ip(self.speed, 0)
-        if self.rect.center[0] < self.left or self.rect.center[0] > self.right:
-            self.speed = -self.speed
-        # ビームを発射
-        if random.random() < self.prob_beam:
-            Beam(self.rect.center)
-        # キャラクターアニメーション
-        self.frame += 1
-#        self.image = self.images[self.frame/self.animcycle%2]
-        self.image = self.images[self.frame//self.animcycle%2]
-
-class Beam(pygame.sprite.Sprite):
-    """エイリアンが発射するビーム"""
-    speed = 25  # 移動速度
-    def __init__(self, pos):
-        # imageとcontainersはmain()でセット
-        pygame.sprite.Sprite.__init__(self, self.containers)
-        self.rect = self.image.get_rect()
-        self.rect.center = pos
-    def update(self):
-        self.rect.move_ip(0, self.speed)  # 下へ移動
-        if self.rect.bottom > SCR_RECT.height:  # 下端に達したら除去
-            self.kill()
-
-'''
-
-
-def load_image(filename, colorkey=None):
-    """画像をロードして画像と矩形を返す"""
-    filename = os.path.join("data", filename)
-    try:
-        image = pygame.image.load(filename)
-    except pygame.error as message:
-        print("Cannot load image:", filename)
-        raise SystemExit(message)
-#    image = image.convert()
-    image = image.convert_alpha()
-    return image
-
-'''
-def split_image(image, n):
-    """横に長いイメージを同じ大きさのn枚のイメージに分割
-    分割したイメージを格納したリストを返す"""
-    image_list = []
-    w = image.get_width()
-    h = image.get_height()
-    w1 = w / n
-#    for i in range(0, w, w1):
-    for i in range(0, w, 22):        
-        surface = pygame.Surface((w1,h))
-        surface.blit(image, (0,0), (i,0,w1,h))
-        surface.set_colorkey(surface.get_at((0,0)), RLEACCEL)
-        surface.convert()
-        image_list.append(surface)
-    return image_list
-
-def load_sound(filename):
-    filename = os.path.join("data", filename)
-    return pygame.mixer.Sound(filename)
-'''
 if __name__ == "__main__":
     main()
