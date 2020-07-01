@@ -22,7 +22,7 @@ face_predictor = dlib.shape_predictor(predictor_path)
 # グローバル変数
 camera = cv2.VideoCapture(2)    #カメラのポート番号
 
-N_PLAYER = 1    #プレイヤー数
+N_PLAYER = 4    #プレイヤー数
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 450
