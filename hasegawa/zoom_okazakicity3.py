@@ -22,7 +22,7 @@ face_predictor = dlib.shape_predictor(predictor_path)
 # グローバル変数
 camera = cv2.VideoCapture(2)    #カメラのポート番号
 
-N_PLAYER = 4    #プレイヤー数
+N_PLAYER = 1    #プレイヤー数
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 450
@@ -41,7 +41,7 @@ spriteduration_min = 10000
 spriteduration_max = 20000
 ###################################################
 
-def divide_img_4(img):
+def divide_img(img):
     '''
     画像を縦2つ×横2つに4分割。[左上, 右上, 左下, 右下]の順に格納した配列を返す。
 
@@ -57,7 +57,10 @@ def divide_img_4(img):
     '''
     height=img.shape[0]
     width=img.shape[1]
-    return np.array([img[:int(height*0.5), :int(width*0.5)], img[:int(height*0.5), int(width*0.5):], img[int(height*0.5):, :int(width*0.5)], img[int(height*0.5):, int(width*0.5):]])
+    if N_PLAYER == 4:
+        return np.array([img[:int(height*0.5), :int(width*0.5)], img[:int(height*0.5), int(width*0.5):], img[int(height*0.5):, :int(width*0.5)], img[int(height*0.5):, int(width*0.5):]])
+    elif N_PLAYER == 1:
+        return np.array([img])
 
 
 # https://qiita.com/mamon/items/bb2334eef596f8cacd9b
@@ -86,7 +89,7 @@ def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*N＿PLAYER, landmarks=[[[0,
     '''
     
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    imgs = divide_img_4(img)
+    imgs = divide_img(img)
     
     trim_imgs=[[0]]*N＿PLAYER
     
@@ -235,23 +238,7 @@ def load_image(filename, colorkey=None):
     image = image.convert_alpha()
     return image
 
-def main():
-    # pygame初期設定 ###########################################################################################
-    pygame.init()
-    pygame.display.set_caption("meal_time")
-
-    all = pygame.sprite.RenderUpdates()
-    Player.containers = all
-
-    screen = pygame.display.set_mode(SCR_RECT.size)
-    screen.fill([0,0,0])
-
-    # 背景初期設定 ###########################################################################################
-    Back_image = load_image("../images/background.png")
-    Back_image = pygame.transform.scale(Back_image,(SCREEN_WIDTH, SCREEN_HEIGHT))
-    back_rect = Back_image.get_rect()
-    
-    # スプライト初期設定 ###########################################################################################
+def sprite_init():
     group_sprite_all = pygame.sprite.RenderUpdates()    #ゲーム中に表示する全てのスプライトを格納するクラス
     group_sprite_exist = pygame.sprite.RenderUpdates()    #実際に表示されているスプライトを格納するクラス
 
@@ -287,6 +274,28 @@ def main():
                 prob -= minus_sprite_list[j,0]
         group_sprite_all.add(minus_sprite)
 
+    return group_sprite_all, group_sprite_exist
+
+
+def main():
+    # pygame初期設定 ###########################################################################################
+    pygame.init()
+    pygame.display.set_caption("meal_time")
+
+    all = pygame.sprite.RenderUpdates()
+    Player.containers = all
+
+    screen = pygame.display.set_mode(SCR_RECT.size)
+    screen.fill([0,0,0])
+
+    # 背景初期設定 ###########################################################################################
+    Back_image = load_image("../images/background.png")
+    Back_image = pygame.transform.scale(Back_image,(SCREEN_WIDTH, SCREEN_HEIGHT))
+    back_rect = Back_image.get_rect()
+    
+    # スプライト初期設定 ###########################################################################################
+    group_sprite_all, group_sprite_exist = sprite_init()
+
     # 得点初期設定 ###########################################################################################
     score = np.zeros(N_PLAYER, np.int8)
 
@@ -307,10 +316,11 @@ def main():
         
     # 終了コマンドまでゲームを継続 ###########################################################################################
     clock = pygame.time.Clock()
+    reset_time = 0
     try:
         while True:
             dirty_rect = []
-            time = pygame.time.get_ticks()
+            time = pygame.time.get_ticks() - reset_time
 
             # 画像取得->顔認識->ゲーム画面に表示
             prev_frame = frame
@@ -379,9 +389,10 @@ def main():
                 if event.type == QUIT:
                     pygame.quit()
                     sys.exit()
-                elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
+                elif event.type == KEYDOWN and event.key == K_SPACE:
+                    group_sprite_all, group_sprite_exist = sprite_init()
+                    score = np.zeros(N_PLAYER, np.int8)
+                    reset_time = pygame.time.get_ticks()
 
     except (KeyboardInterrupt,SystemExit):
         pygame.quit()
