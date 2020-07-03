@@ -348,7 +348,7 @@ def main():
                     obj.exist = False
             
             # 待機時間
-            clock.tick(10)
+            clock.tick(30)
 
             # updateを画面に反映
             all.update()
