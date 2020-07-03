@@ -1,4 +1,4 @@
-# basic
+ï»¿# basic
 import os
 import sys
 import random
@@ -15,16 +15,16 @@ monitor = {"top": 60, "left":  1100, "width": 325, "height": 184}
 import pygame
 from pygame.locals import *
 
-# dlibŠwKÏ‚İƒ‚ƒfƒ‹
+# dlibå­¦ç¿’æ¸ˆã¿ãƒ¢ãƒ‡ãƒ«
 face_detector = dlib.get_frontal_face_detector()
 predictor_path = 'shape_predictor_68_face_landmarks.dat'
 face_predictor = dlib.shape_predictor(predictor_path)
 
 ###################################################
-# ƒOƒ[ƒoƒ‹•Ï”
-camera = cv2.VideoCapture(2)    #ƒJƒƒ‰‚Ìƒ|[ƒg”Ô†
+# ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+camera = cv2.VideoCapture(2)    #ã‚«ãƒ¡ãƒ©ã®ãƒãƒ¼ãƒˆç•ªå·
 
-N_PLAYER = 4    #ƒvƒŒƒCƒ„[”
+N_PLAYER = 4    #ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ•°
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 450
@@ -33,11 +33,11 @@ SCR_RECT = Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 FACE_SIZE = 100
 SPRITE_SIZE = 30
 
-WAITING_TIME = 5000    #ƒIƒuƒWƒFƒNƒg‚ªoŒ»‚·‚é‚Ü‚Å‚ÌŠÔ
-GAME_DURATION = WAITING_TIME + 60000    #ƒQ[ƒ€‚ÌŒp‘±ŠÔ(ms)
+WAITING_TIME = 5000    #ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãŒå‡ºç¾ã™ã‚‹ã¾ã§ã®æ™‚é–“
+GAME_DURATION = WAITING_TIME + 60000    #ã‚²ãƒ¼ãƒ ã®ç¶™ç¶šæ™‚é–“(ms)
 
-N_FOOD = int(GAME_DURATION/1000/2)   #ƒŠƒ“ƒS‚Ì”
-N_ENEMY = int(GAME_DURATION/1000/4)   #“G‚Ì”
+N_FOOD = int(GAME_DURATION/1000/2)   #ãƒªãƒ³ã‚´ã®æ•°
+N_ENEMY = int(GAME_DURATION/1000/4)   #æ•µã®æ•°
 
 spriteduration_min = 10000   
 spriteduration_max = 20000
@@ -45,17 +45,17 @@ spriteduration_max = 20000
 
 def divide_img(img):
     '''
-    ‰æ‘œ‚ğc2‚Â~‰¡2‚Â‚É4•ªŠ„B[¶ã, ‰Eã, ¶‰º, ‰E‰º]‚Ì‡‚ÉŠi”[‚µ‚½”z—ñ‚ğ•Ô‚·B
+    ç”»åƒã‚’ç¸¦2ã¤Ã—æ¨ª2ã¤ã«4åˆ†å‰²ã€‚[å·¦ä¸Š, å³ä¸Š, å·¦ä¸‹, å³ä¸‹]ã®é †ã«æ ¼ç´ã—ãŸé…åˆ—ã‚’è¿”ã™ã€‚
 
     Parameters
     ----------
     img : np.ndarray : img[height, width, color]
-        ‰æ‘œ
+        ç”»åƒ
 
     Returns
     -------
     imgs : list : imgs[area] = [height, width, color]
-        c2‚Â~‰¡2‚Â‚É4•ªŠ„‚µ‚½‰æ‘œB[¶ãE‰EãE¶‰ºE‰E‰º]‚Ì‡‚ÉŠi”[‚³‚ê‚Ä‚¢‚éB
+        ç¸¦2ã¤Ã—æ¨ª2ã¤ã«4åˆ†å‰²ã—ãŸç”»åƒã€‚[å·¦ä¸Šãƒ»å³ä¸Šãƒ»å·¦ä¸‹ãƒ»å³ä¸‹]ã®é †ã«æ ¼ç´ã•ã‚Œã¦ã„ã‚‹ã€‚
     '''
     height=img.shape[0]
     width=img.shape[1]
@@ -69,51 +69,51 @@ def divide_img(img):
 # https://qiita.com/mimitaro/items/bbc58051104eafc1eb38
 # https://woraise.com/2019/03/21/desert-shooting/
 # https://gist.github.com/radames/1e7c794842755683162b
-def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*NQPLAYER, landmarks=[[[0,0]]]*NQPLAYER):
+def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*Nï¼¿PLAYER, landmarks=[[[0,0]]]*Nï¼¿PLAYER):
     '''
-    ¶ãE‰EãE¶‰ºE‰E‰º‚É4l‚ªÊ‚Á‚Ä‚¢‚é‰æ‘œ‚©‚çA4l‚ÌŠç‚ğƒgƒŠƒ~ƒ“ƒO‚µAŠç‚ÌÀ•W‚ÆŒû‚ÌÀ•W‚ğŒvZ‚·‚é
+    å·¦ä¸Šãƒ»å³ä¸Šãƒ»å·¦ä¸‹ãƒ»å³ä¸‹ã«4äººãŒå†™ã£ã¦ã„ã‚‹ç”»åƒã‹ã‚‰ã€4äººã®é¡”ã‚’ãƒˆãƒªãƒŸãƒ³ã‚°ã—ã€é¡”ã®åº§æ¨™ã¨å£ã®åº§æ¨™ã‚’è¨ˆç®—ã™ã‚‹
 
     Parameters
     ----------
     img : np.ndarray : img[height, width, color]
-        ‰æ‘œ
+        ç”»åƒ
     error_img : np.ndarray : img[player] = [height, width, color]
-        Šç‚ª”F¯‚³‚ê‚È‚¢ê‡‚É‘}“ü‚·‚é‰æ‘œ
+        é¡”ãŒèªè­˜ã•ã‚Œãªã„å ´åˆã«æŒ¿å…¥ã™ã‚‹ç”»åƒ
 
     Returns
     -------
     imgs : list : imgs[player] = [height, width, color]
-        Šç‚Ì•”•ª‚ğƒgƒŠƒ~ƒ“ƒO‚µ‚½‰æ‘œB(¶ã‚ÌlE‰Eã‚ÌlE¶‰º‚ÌlE‰E‰º‚Ìl)‚Ì‡‚ÉŠi”[‚³‚ê‚Ä‚¢‚éB
+        é¡”ã®éƒ¨åˆ†ã‚’ãƒˆãƒªãƒŸãƒ³ã‚°ã—ãŸç”»åƒã€‚(å·¦ä¸Šã®äººãƒ»å³ä¸Šã®äººãƒ»å·¦ä¸‹ã®äººãƒ»å³ä¸‹ã®äºº)ã®é †ã«æ ¼ç´ã•ã‚Œã¦ã„ã‚‹ã€‚
     pos : np.array : pos[player] = [top, bottom, left, right]
-        4•ªŠ„‚µ‚½‚»‚ê‚¼‚ê‚Ì‰æ‘œ‚Ì¶ã‚ğŒ´“_‚Æ‚µ‚½AƒgƒŠƒ~ƒ“ƒO‚µ‚½‰æ‘œ‚ÌÀ•W‚ªŠi”[‚³‚ê‚Ä‚¢‚éB
+        4åˆ†å‰²ã—ãŸãã‚Œãã‚Œã®ç”»åƒã®å·¦ä¸Šã‚’åŸç‚¹ã¨ã—ãŸã€ãƒˆãƒªãƒŸãƒ³ã‚°ã—ãŸç”»åƒã®åº§æ¨™ãŒæ ¼ç´ã•ã‚Œã¦ã„ã‚‹ã€‚
     landmarks : np.array : landmark[player] = [landmarks, position]
-        4•ªŠ„‚µ‚½‚»‚ê‚¼‚ê‚Ì‰æ‘œ‚Ì¶ã‚ğŒ´“_‚Æ‚µ‚½AŒû‚ÌÀ•W‚ªŠi”[‚³‚ê‚Ä‚¢‚éB
+        4åˆ†å‰²ã—ãŸãã‚Œãã‚Œã®ç”»åƒã®å·¦ä¸Šã‚’åŸç‚¹ã¨ã—ãŸã€å£ã®åº§æ¨™ãŒæ ¼ç´ã•ã‚Œã¦ã„ã‚‹ã€‚
     '''
     
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     imgs = divide_img(img)
     
-    trim_imgs=[[0]]*NQPLAYER
+    trim_imgs=[[0]]*Nï¼¿PLAYER
     
     for i, img in enumerate(imgs):
         height = img.shape[0]
         width = img.shape[1]
 
-        # ŠçŒŸo
+        # é¡”æ¤œå‡º
         img_gry = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         faces = face_detector(img_gry, 1)
 
         if len(faces)==0:
             trim_imgs[i] = error_img[i]
-            continue    #Šç‚ªŒŸo‚³‚ê‚È‚¢ê‡‚Íˆ—‚ğ‘Å‚¿Ø‚é
-        face = faces[0]    #Šç‚ª•¡”ŒŸo‚³‚ê‚½ê‡‚É‚ÍAæ“ª‚ğÌ—p
+            continue    #é¡”ãŒæ¤œå‡ºã•ã‚Œãªã„å ´åˆã¯å‡¦ç†ã‚’æ‰“ã¡åˆ‡ã‚‹
+        face = faces[0]    #é¡”ãŒè¤‡æ•°æ¤œå‡ºã•ã‚ŒãŸå ´åˆã«ã¯ã€å…ˆé ­ã‚’æ¡ç”¨
     
-        # Šç‚Ìƒ‰ƒ“ƒhƒ}[ƒNŒŸo
+        # é¡”ã®ãƒ©ãƒ³ãƒ‰ãƒãƒ¼ã‚¯æ¤œå‡º
         landmark = face_predictor(img_gry, face)
-        # ˆ—‚‘¬‰»‚Ì‚½‚ßƒ‰ƒ“ƒhƒ}[ƒNŒQ‚ğNumPy”z—ñ‚É•ÏŠ·
+        # å‡¦ç†é«˜é€ŸåŒ–ã®ãŸã‚ãƒ©ãƒ³ãƒ‰ãƒãƒ¼ã‚¯ç¾¤ã‚’NumPyé…åˆ—ã«å¤‰æ›
         landmark = face_utils.shape_to_np(landmark)[60:68]
 
-        # ˜gŠO‚ÌÀ•W‚ğŠÛ‚ß‚é
+        # æ å¤–ã®åº§æ¨™ã‚’ä¸¸ã‚ã‚‹
         top = max(face.top(), 0)
         bottom = min(face.bottom(), img.shape[0])
         left = max(face.left(), 0)
@@ -121,13 +121,13 @@ def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*NQPLAYER, landmarks=[[[0,0
         
         img_trim = img[top:bottom, left:right]
 
-        height_trim = int(img_trim.shape[0]/height*SCREEN_HEIGHT)    #ƒQ[ƒ€‰æ–Ê‚ÌkÚ‚É‡‚í‚¹‚ÄŠg‘å
-        width_trim = int(img_trim.shape[1]/width*SCREEN_WIDTH)    #ƒQ[ƒ€‰æ–Ê‚ÌkÚ‚É‡‚í‚¹‚ÄŠg‘å
+        height_trim = int(img_trim.shape[0]/height*SCREEN_HEIGHT)    #ã‚²ãƒ¼ãƒ ç”»é¢ã®ç¸®å°ºã«åˆã‚ã›ã¦æ‹¡å¤§
+        width_trim = int(img_trim.shape[1]/width*SCREEN_WIDTH)    #ã‚²ãƒ¼ãƒ ç”»é¢ã®ç¸®å°ºã«åˆã‚ã›ã¦æ‹¡å¤§
 
-        img_trim = cv2.resize(img_trim , (FACE_SIZE, FACE_SIZE))    #ƒvƒŒƒCƒ„[‚Ì‰æ‘œƒTƒCƒY‚Í100*100‚ÉŒÅ’è
+        img_trim = cv2.resize(img_trim , (FACE_SIZE, FACE_SIZE))    #ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ç”»åƒã‚µã‚¤ã‚ºã¯100*100ã«å›ºå®š
         trim_imgs[i] = img_trim
 
-        pos[i] = [int(top / height * SCREEN_HEIGHT), int(bottom / height * SCREEN_HEIGHT), int(left / width * SCREEN_WIDTH), int(right / width * SCREEN_WIDTH)]    #ƒQ[ƒ€‰æ–Ê‚ÌkÚ‚É‡‚í‚¹‚ÄŠg‘å
+        pos[i] = [int(top / height * SCREEN_HEIGHT), int(bottom / height * SCREEN_HEIGHT), int(left / width * SCREEN_WIDTH), int(right / width * SCREEN_WIDTH)]    #ã‚²ãƒ¼ãƒ ç”»é¢ã®ç¸®å°ºã«åˆã‚ã›ã¦æ‹¡å¤§
 
         landmark[:,0] = pos[i][2] + (-pos[i][2] + np.floor(landmark[:,0] / width * SCREEN_WIDTH)) / width_trim * FACE_SIZE
         landmark[:,1] = pos[i][0] + (-pos[i][0] + np.floor(landmark[:,1] / height * SCREEN_HEIGHT)) / height_trim * FACE_SIZE
@@ -136,18 +136,18 @@ def face_detect_trim(img, error_img, pos=[[0,0,0,0]]*NQPLAYER, landmarks=[[[0,0
     return trim_imgs, np.array(pos), np.array(landmarks)
 
 class Food(pygame.sprite.Sprite):
-    # ƒXƒvƒ‰ƒCƒg‚ğì¬(‰æ‘œƒtƒ@ƒCƒ‹–¼, Šl“¾ƒXƒRƒA)
+    # ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚’ä½œæˆ(ç”»åƒãƒ•ã‚¡ã‚¤ãƒ«å, ç²å¾—ã‚¹ã‚³ã‚¢)
     def __init__(self, img, score, v):
-        # oŒ»•ûŒüEŠp“x
+        # å‡ºç¾æ–¹å‘ãƒ»è§’åº¦
         appeardirection = np.random.choice(['l','r','u','d'])
         theta = (np.random.random_sample() * (2.0 / 3.0) + (1.0 / 6.0)) * np.pi
         vx_init = v * np.cos(theta)
         vy_init = v * np.sin(theta)
         
-        # ƒIƒuƒWƒFƒNƒg‚Ì“¾“_
+        # ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å¾—ç‚¹
         self.score = score
 
-        # ‰ŠúˆÊ’u‚Æ‰‘¬
+        # åˆæœŸä½ç½®ã¨åˆé€Ÿ
         if appeardirection =='u':
             x_init = np.random.randint(0,SCREEN_WIDTH)
             y_init = 0
@@ -164,9 +164,9 @@ class Food(pygame.sprite.Sprite):
             y_init = np.random.randint(0,SCREEN_HEIGHT)
             vx_init,vy_init = -vy_init,vx_init
 
-        # oŒ»
+        # å‡ºç¾æ™‚åˆ»
         appeartime = np.random.randint(WAITING_TIME, GAME_DURATION)
-        # Á–Å@@@@
+        # æ¶ˆæ»…æ™‚åˆ»ã€€ã€€ã€€ã€€
         disappeartime = min(GAME_DURATION, appeartime + np.random.randint(spriteduration_min,spriteduration_max))
 
         pygame.sprite.Sprite.__init__(self)
@@ -183,7 +183,7 @@ class Food(pygame.sprite.Sprite):
     def update(self,time):
         if self.exist:
             self.rect.move_ip(self.vx, self.vy)
-        # •Ç‚ÆÕ“Ë‚Ìˆ—(’µ‚Ë•Ô‚è)
+        # å£ã¨è¡çªæ™‚ã®å‡¦ç†(è·³ã­è¿”ã‚Š)
         if self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
             if time>self.disappeartime:
                 self.exist = False
@@ -196,11 +196,11 @@ class Food(pygame.sprite.Sprite):
                 self.kill()
             else:
                 self.vy = -self.vy
-        # •Ç‚ÆÕ“Ë‚Ìˆ—(•Ç‚ğ’´‚¦‚È‚¢‚æ‚¤‚É)
+        # å£ã¨è¡çªæ™‚ã®å‡¦ç†(å£ã‚’è¶…ãˆãªã„ã‚ˆã†ã«)
         self.rect = self.rect.clamp(SCR_RECT)
     
 class Player(pygame.sprite.Sprite):
-    """©‹@"""
+    """è‡ªæ©Ÿ"""
     def __init__(self):
         pygame.sprite.Sprite.__init__(self, self.containers)
 
@@ -217,7 +217,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.left = self.pos[2]
 
 def collision_detection(player, group_sprite_exist,landmark):
-    """Õ“Ë”»’è"""
+    """è¡çªåˆ¤å®š"""
     c=0
     minplot=np.min(landmark,axis=0)
     maxplot=np.max(landmark,axis=0)
@@ -230,7 +230,7 @@ def collision_detection(player, group_sprite_exist,landmark):
     return c, is_hit
 
 def load_image(filename, colorkey=None):
-    """‰æ‘œ‚ğƒ[ƒh‚µ‚Ä‰æ‘œ‚Æ‹éŒ`‚ğ•Ô‚·"""
+    """ç”»åƒã‚’ãƒ­ãƒ¼ãƒ‰ã—ã¦ç”»åƒã¨çŸ©å½¢ã‚’è¿”ã™"""
     #filename = os.path.join("data", filename)
     try:
         image = pygame.image.load(filename)
@@ -241,10 +241,10 @@ def load_image(filename, colorkey=None):
     return image
 
 def sprite_init():
-    group_sprite_all = pygame.sprite.RenderUpdates()    #ƒQ[ƒ€’†‚É•\¦‚·‚é‘S‚Ä‚ÌƒXƒvƒ‰ƒCƒg‚ğŠi”[‚·‚éƒNƒ‰ƒX
-    group_sprite_exist = pygame.sprite.RenderUpdates()    #ÀÛ‚É•\¦‚³‚ê‚Ä‚¢‚éƒXƒvƒ‰ƒCƒg‚ğŠi”[‚·‚éƒNƒ‰ƒX
+    group_sprite_all = pygame.sprite.RenderUpdates()    #ã‚²ãƒ¼ãƒ ä¸­ã«è¡¨ç¤ºã™ã‚‹å…¨ã¦ã®ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚’æ ¼ç´ã™ã‚‹ã‚¯ãƒ©ã‚¹
+    group_sprite_exist = pygame.sprite.RenderUpdates()    #å®Ÿéš›ã«è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã‚’æ ¼ç´ã™ã‚‹ã‚¯ãƒ©ã‚¹
 
-    # ‰Á“_ƒXƒvƒ‰ƒCƒg
+    # åŠ ç‚¹ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆ
     apple_fig = pygame.transform.scale(pygame.image.load("../images/apple1.png").convert_alpha(),(30, 30))
     grape_fig = pygame.transform.scale(pygame.image.load("../images/grape3.png").convert_alpha(),(50, 50))
     watermelon_fig = pygame.transform.scale(pygame.image.load("../images/watermelon5.png").convert_alpha(),(60, 60))
@@ -261,7 +261,7 @@ def sprite_init():
                 prob -= plus_sprite_list[j,0]
         group_sprite_all.add(plus_sprite)
 
-    # Œ¸“_ƒXƒvƒ‰ƒCƒg
+    # æ¸›ç‚¹ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆ
     poison_apple_fig = pygame.transform.scale(pygame.image.load("../images/poison_apple-2.png").convert_alpha(),(40, 40))
     spider_fig = pygame.transform.scale(pygame.image.load("../images/spider-10.png").convert_alpha(),(70, 70))
     minus_sprite_list = np.array([[0.8,poison_apple_fig,-2,10],[0.2,spider_fig,-10,40]])
@@ -280,7 +280,7 @@ def sprite_init():
 
 
 def main():
-    # pygame‰Šúİ’è ###########################################################################################
+    # pygameåˆæœŸè¨­å®š ###########################################################################################
     pygame.init()
     pygame.display.set_caption("meal_time")
 
@@ -290,24 +290,24 @@ def main():
     screen = pygame.display.set_mode(SCR_RECT.size)
     screen.fill([0,0,0])
 
-    # ”wŒi‰Šúİ’è ###########################################################################################
+    # èƒŒæ™¯åˆæœŸè¨­å®š ###########################################################################################
     Back_image = load_image("../images/background.png")
     Back_image = pygame.transform.scale(Back_image,(SCREEN_WIDTH, SCREEN_HEIGHT))
     back_rect = Back_image.get_rect()
     
-    # ƒXƒvƒ‰ƒCƒg‰Šúİ’è ###########################################################################################
+    # ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆåˆæœŸè¨­å®š ###########################################################################################
     group_sprite_all, group_sprite_exist = sprite_init()
 
-    # “¾“_‰Šúİ’è ###########################################################################################
+    # å¾—ç‚¹åˆæœŸè¨­å®š ###########################################################################################
     score = np.zeros(N_PLAYER, np.int8)
 
-    # ƒvƒŒƒCƒ„[‰Šúİ’è ###########################################################################################
-    # Šç”F¯‚É¸”s‚µ‚½Û‚É•\¦‚·‚é‰æ‘œ
+    # ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼åˆæœŸè¨­å®š ###########################################################################################
+    # é¡”èªè­˜ã«å¤±æ•—ã—ãŸéš›ã«è¡¨ç¤ºã™ã‚‹ç”»åƒ
     error_img = cv2.resize(cv2.imread("../images/owl.jpg"), (FACE_SIZE,FACE_SIZE))
 
     mss_instance = mss.mss()
     img_np = numpy.array(mss_instance.grab(monitor))
-    #_, frame = camera.read()    #ƒJƒƒ‰‰æ‘œæ“¾
+    #_, frame = camera.read()    #ã‚«ãƒ¡ãƒ©ç”»åƒå–å¾—
     frame,pos,landmark = face_detect_trim(img_np, [error_img]*N_PLAYER)
     
     player = []
@@ -318,7 +318,7 @@ def main():
         player[i].image = pygame.surfarray.make_surface(fr.swapaxes(0,1))
         player[i].init(pos[i])
         
-    # I—¹ƒRƒ}ƒ“ƒh‚Ü‚ÅƒQ[ƒ€‚ğŒp‘± ###########################################################################################
+    # çµ‚äº†ã‚³ãƒãƒ³ãƒ‰ã¾ã§ã‚²ãƒ¼ãƒ ã‚’ç¶™ç¶š ###########################################################################################
     clock = pygame.time.Clock()
     reset_time = 0
     try:
@@ -326,7 +326,7 @@ def main():
             dirty_rect = []
             time = pygame.time.get_ticks() - reset_time
 
-            # ‰æ‘œæ“¾->Šç”F¯->ƒQ[ƒ€‰æ–Ê‚É•\¦
+            # ç”»åƒå–å¾—->é¡”èªè­˜->ã‚²ãƒ¼ãƒ ç”»é¢ã«è¡¨ç¤º
             prev_frame = frame
             #_, frame = camera.read()
             img_np = numpy.array(mss_instance.grab(monitor))
@@ -340,28 +340,28 @@ def main():
                 #player[i].update()
                 #dirty_rect += player[i].containers.draw(screen)
 
-            # ƒXƒvƒ‰ƒCƒg‚Ì•\¦‚ÆÁ‹
+            # ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã®è¡¨ç¤ºã¨æ¶ˆå»
             for obj in group_sprite_all:
-                # obj.appeartime‚É‚È‚Á‚½‚çgroup_sprite_exist‚É“ü‚ê‚é
+                # obj.appeartimeã«ãªã£ãŸã‚‰group_sprite_existã«å…¥ã‚Œã‚‹
                 if obj.exist == False and time >= obj.appeartime:
                     group_sprite_exist.add(obj)
                     obj.exist = True
 
-                # obj.disappeartime‚É‚È‚Á‚½‚çgroup_sprite_exist‚©‚çÁ‚·
+                # obj.disappeartimeã«ãªã£ãŸã‚‰group_sprite_existã‹ã‚‰æ¶ˆã™
                 if obj.exist == True and time > GAME_DURATION:
                     group_sprite_exist.remove(obj)
                     obj.exist = False
             
-            # ‘Ò‹@ŠÔ
+            # å¾…æ©Ÿæ™‚é–“
             clock.tick(10)
 
-            # update‚ğ‰æ–Ê‚É”½‰f
+            # updateã‚’ç”»é¢ã«åæ˜ 
             all.update()
             dirty_rect = all.draw(screen)
             group_sprite_exist.update(time)
             dirty_rect += group_sprite_exist.draw(screen)
 
-            # ƒXƒRƒA‚ÌXV
+            # ã‚¹ã‚³ã‚¢ã®æ›´æ–°
             if len(group_sprite_exist)>0:
                 for i in range(N_PLAYER):
                     c, is_hit =collision_detection(player[i], group_sprite_exist, landmark[i])
@@ -370,18 +370,18 @@ def main():
                         text = pygame.font.Font(None, 60).render(str(c), True, (255,0,0))
                         screen.blit(text, [pos[i,2]+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.3])
 
-            # c‚èŠÔ‚Ì•\¦
-            if time<WAITING_TIME:    #ƒQ[ƒ€ŠJn‘O
+            # æ®‹ã‚Šæ™‚é–“ã®è¡¨ç¤º
+            if time<WAITING_TIME:    #ã‚²ãƒ¼ãƒ é–‹å§‹å‰
                 text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-WAITING_TIME)/1000)), True, (255,255,255))
                 text2 = pygame.font.Font(None, 500).render(str(int((WAITING_TIME-time)/1000)+1), True, (255,0,0))
                 screen.blit(text2, [SCREEN_WIDTH*0.4, SCREEN_HEIGHT*0.2])
-            elif time>GAME_DURATION:    #ƒQ[ƒ€I—¹Œã
+            elif time>GAME_DURATION:    #ã‚²ãƒ¼ãƒ çµ‚äº†å¾Œ
                 text = pygame.font.Font(None, 50).render("TIME: "+str(0), True, (255,255,255))
             else:
                 text = pygame.font.Font(None, 50).render("TIME: "+str(int((GAME_DURATION-time)/1000+1)), True, (255,255,255))
             screen.blit(text, [SCREEN_WIDTH*0.45, 5])
 
-            # ƒXƒRƒA‚Ì•\¦
+            # ã‚¹ã‚³ã‚¢ã®è¡¨ç¤º
             for i in range(N_PLAYER):
                 text1 = pygame.font.Font(None, 24).render("Player"+str(i+1)+": " + str(score[i]), True, (255,255,255))
                 screen.blit(text1, [SCREEN_WIDTH * i / 4. + 10, SCREEN_HEIGHT * 0.95])
