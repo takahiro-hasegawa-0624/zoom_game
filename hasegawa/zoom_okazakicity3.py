@@ -221,7 +221,7 @@ def collision_detection(player, group_sprite_exist,landmark):
     maxplot= np.max(landmark,axis=0)
     is_hit = False
     for Sprite in group_sprite_exist:
-        if SCREEN_WIDTH - maxplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= SCREEN_WIDTH - minplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
+        if SCREEN_WIDTH - minplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= SCREEN_WIDTH - maxplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
             Sprite.kill()
             is_hit = True
             c += Sprite.score
