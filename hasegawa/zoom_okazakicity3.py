@@ -205,14 +205,14 @@ class Player(pygame.sprite.Sprite):
     def init(self, pos):
         self.rect = self.image.get_rect()
         self.rect.top = pos[0]
-        self.rect.left = SCREEN_WIDTH - pos[2]
+        self.rect.left = SCREEN_WIDTH - pos[2] - 150
         self.reload_timer = 0
         self.pos=pos
     def pos_update(self,pos):
         self.pos=pos
     def update(self):
         self.rect.top = self.pos[0]
-        self.rect.left = SCREEN_WIDTH - self.pos[2]
+        self.rect.left = SCREEN_WIDTH - self.pos[2] - 150
 
 def collision_detection(player, group_sprite_exist,landmark):
     """衝突判定"""
@@ -363,7 +363,7 @@ def main():
                     score[i] = score[i] + c
                     if is_hit:
                         text = pygame.font.Font(None, 60).render(str(c), True, (255,0,0))
-                        screen.blit(text, [pos[i,2]+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.3])
+                        screen.blit(text, [pos[i,2]+FACE_SIZE*0.7, SCREEN_WIDTH-pos[i,1]-150-FACE_SIZE*0.3])
 
             # 残り時間の表示
             if time<WAITING_TIME:    #ゲーム開始前
@@ -381,7 +381,7 @@ def main():
                 text1 = pygame.font.Font(None, 24).render("Player"+str(i+1)+": " + str(score[i]), True, (255,255,255))
                 screen.blit(text1, [SCREEN_WIDTH * i / 4. + 10, SCREEN_HEIGHT * 0.95])
                 text2 = pygame.font.Font(None, 32).render(str(score[i]), True, (255,255,255))
-                screen.blit(text2, [pos[i,2]+FACE_SIZE*0.4, pos[i,0]+FACE_SIZE*0.1])
+                screen.blit(text2, [pos[i,2]+FACE_SIZE*0.4, SCREEN_WIDTH-pos[i,0]-150+FACE_SIZE*0.1])
 
             pygame.display.update(dirty_rect)
 
