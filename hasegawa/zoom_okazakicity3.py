@@ -221,7 +221,7 @@ def collision_detection(player, group_sprite_exist,landmark):
     maxplot= np.max(landmark,axis=0)
     is_hit = False
     for Sprite in group_sprite_exist:
-        if SCREEN_WIDTH - minplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= SCREEN_WIDTH - maxplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
+        if SCREEN_WIDTH - minplot[0] - 150 <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= SCREEN_WIDTH - maxplot[0] - 150 and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
             Sprite.kill()
             is_hit = True
             c += Sprite.score
@@ -363,7 +363,7 @@ def main():
                     score[i] = score[i] + c
                     if is_hit:
                         text = pygame.font.Font(None, 60).render(str(c), True, (255,0,0))
-                        screen.blit(text, [pos[i,2]+FACE_SIZE*0.7, SCREEN_WIDTH-pos[i,1]-150-FACE_SIZE*0.3])
+                        screen.blit(text, [SCREEN_WIDTH-pos[i,2]-150+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.3])
 
             # 残り時間の表示
             if time<WAITING_TIME:    #ゲーム開始前
@@ -381,7 +381,7 @@ def main():
                 text1 = pygame.font.Font(None, 24).render("Player"+str(i+1)+": " + str(score[i]), True, (255,255,255))
                 screen.blit(text1, [SCREEN_WIDTH * i / 4. + 10, SCREEN_HEIGHT * 0.95])
                 text2 = pygame.font.Font(None, 32).render(str(score[i]), True, (255,255,255))
-                screen.blit(text2, [pos[i,2]+FACE_SIZE*0.4, SCREEN_WIDTH-pos[i,0]-150+FACE_SIZE*0.1])
+                screen.blit(text2, [SCREEN_WIDTH-pos[i,2]-150+FACE_SIZE*0.4, pos[i,0]+FACE_SIZE*0.1])
 
             pygame.display.update(dirty_rect)
 
