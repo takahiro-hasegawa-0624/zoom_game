@@ -6,13 +6,6 @@ import mss
 import numpy
 monitor = {"top": 60, "left":  1100, "width": 325, "height": 184}
 
-
-
-
-
-
-
-
 import os
 import sys
 import random
