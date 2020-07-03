@@ -206,15 +206,15 @@ class Player(pygame.sprite.Sprite):
 
     def init(self, pos):
         self.rect = self.image.get_rect()
-        self.rect.top = pos[0]
-        self.rect.left = pos[2]
+        self.rect.top = screem_height - pos[0]
+        self.rect.left = screen_width - pos[2]
         self.reload_timer = 0
         self.pos=pos
     def pos_update(self,pos):
         self.pos=pos
     def update(self):
-        self.rect.top = self.pos[0]
-        self.rect.left = self.pos[2]
+        self.rect.top = screen_height - self.pos[0]
+        self.rect.left = screen_width - self.pos[2]
 
 def collision_detection(player, group_sprite_exist,landmark):
     """衝突判定"""
