@@ -301,7 +301,7 @@ def main():
 
     # プレイヤー初期設定 ###########################################################################################
     # 顔認識に失敗した際に表示する画像
-    error_img = cv2.resize(cv2.imread("../images/owl.jpg"), (FACE_SIZE,FACE_SIZE))
+    error_img = cv2.resize(cv2.imread("../images/altanative_image.png"), (FACE_SIZE,FACE_SIZE))
 
     _, frame = camera.read()    #カメラ画像取得
     frame,pos,landmark = face_detect_trim(frame, [error_img]*N_PLAYER)
