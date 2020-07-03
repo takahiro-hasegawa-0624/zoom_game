@@ -204,24 +204,24 @@ class Player(pygame.sprite.Sprite):
 
     def init(self, pos):
         self.rect = self.image.get_rect()
-        self.rect.top = SCREEN_HEIGHT - pos[0]
+        self.rect.top = pos[0]
         self.rect.left = SCREEN_WIDTH - pos[2]
         self.reload_timer = 0
         self.pos=pos
     def pos_update(self,pos):
         self.pos=pos
     def update(self):
-        self.rect.top = SCREEN_HEIGHT - self.pos[0]
+        self.rect.top = self.pos[0]
         self.rect.left = SCREEN_WIDTH - self.pos[2]
 
 def collision_detection(player, group_sprite_exist,landmark):
     """衝突判定"""
     c=0
-    minplot=[SCREEN_WIDTH, SCREEN_HEIGHT] - np.min(landmark,axis=0)
-    maxplot=[SCREEN_WIDTH, SCREEN_HEIGHT] - np.max(landmark,axis=0)
+    minplot= np.min(landmark,axis=0)
+    maxplot= np.max(landmark,axis=0)
     is_hit = False
     for Sprite in group_sprite_exist:
-        if minplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= maxplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
+        if SCREEN_WIDTH - minplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= SCREEN_WIDTH - maxplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
             Sprite.kill()
             is_hit = True
             c += Sprite.score
