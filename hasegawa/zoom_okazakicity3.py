@@ -20,9 +20,10 @@ face_predictor = dlib.shape_predictor(predictor_path)
 
 ###################################################
 # グローバル変数
-camera = cv2.VideoCapture(2)    #カメラのポート番号
+FLIP_HORIZONTAL = False
+camera = cv2.VideoCapture(1)    #カメラのポート番号
 
-N_PLAYER = 4    #プレイヤー数
+N_PLAYER = 1    #プレイヤー数
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 450
@@ -205,14 +206,20 @@ class Player(pygame.sprite.Sprite):
     def init(self, pos):
         self.rect = self.image.get_rect()
         self.rect.top = pos[0]
-        self.rect.left = SCREEN_WIDTH - pos[2] - 150
+        if FLIP_HORIZONTAL == True:
+            self.rect.left = SCREEN_WIDTH - pos[2] - 150
+        else:
+            self.rect.left = pos[2]
         self.reload_timer = 0
         self.pos=pos
     def pos_update(self,pos):
         self.pos=pos
     def update(self):
         self.rect.top = self.pos[0]
-        self.rect.left = SCREEN_WIDTH - self.pos[2] - 150
+        if FLIP_HORIZONTAL == True:
+            self.rect.left = SCREEN_WIDTH - self.pos[2] - 150
+        else:
+            self.rect.left = self.pos[2]
 
 def collision_detection(player, group_sprite_exist,landmark):
     """衝突判定"""
@@ -220,11 +227,19 @@ def collision_detection(player, group_sprite_exist,landmark):
     minplot= np.min(landmark,axis=0)
     maxplot= np.max(landmark,axis=0)
     is_hit = False
-    for Sprite in group_sprite_exist:
-        if SCREEN_WIDTH - maxplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= SCREEN_WIDTH - minplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
-            Sprite.kill()
-            is_hit = True
-            c += Sprite.score
+    if FLIP_HORIZONTAL == True:
+        for Sprite in group_sprite_exist:
+            if SCREEN_WIDTH - maxplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= SCREEN_WIDTH - minplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
+                Sprite.kill()
+                is_hit = True
+                c += Sprite.score
+    else:
+        for Sprite in group_sprite_exist:
+            if minplot[0] <= Sprite.rect.left + Sprite.rect.width and Sprite.rect.left  <= maxplot[0] and minplot[1] <= Sprite.rect.top + Sprite.rect.height and Sprite.rect.top <= maxplot[1]:
+                Sprite.kill()
+                is_hit = True
+                c += Sprite.score
+
     return c, is_hit
 
 def load_image(filename, colorkey=None):
@@ -363,7 +378,10 @@ def main():
                     score[i] = score[i] + c
                     if is_hit:
                         text = pygame.font.Font(None, 60).render(str(c), True, (255,0,0))
-                        screen.blit(text, [SCREEN_WIDTH-pos[i,2]-150+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.3])
+                        if FLIP_HORIZONTAL == True:
+                            screen.blit(text, [SCREEN_WIDTH-pos[i,2]-150+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.5])
+                        else:
+                            screen.blit(text, [pos[i,2]+FACE_SIZE*0.7, pos[i,1]-FACE_SIZE*0.5])
 
             # 残り時間の表示
             if time<WAITING_TIME:    #ゲーム開始前
@@ -381,7 +399,10 @@ def main():
                 text1 = pygame.font.Font(None, 24).render("Player"+str(i+1)+": " + str(score[i]), True, (255,255,255))
                 screen.blit(text1, [SCREEN_WIDTH * i / 4. + 10, SCREEN_HEIGHT * 0.95])
                 text2 = pygame.font.Font(None, 32).render(str(score[i]), True, (255,255,255))
-                screen.blit(text2, [SCREEN_WIDTH-pos[i,2]-150+FACE_SIZE*0.4, pos[i,0]+FACE_SIZE*0.1])
+                if FLIP_HORIZONTAL == True:
+                    screen.blit(text2, [SCREEN_WIDTH-pos[i,2]-150+FACE_SIZE*0.4, pos[i,0]+FACE_SIZE*0.1])
+                else:
+                    screen.blit(text2, [pos[i,2]+FACE_SIZE*0.4, pos[i,0]+FACE_SIZE*0.1])
 
             pygame.display.update(dirty_rect)
 
