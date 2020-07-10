@@ -30,13 +30,12 @@ SCREEN_HEIGHT = 450
 SCR_RECT = Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 FACE_SIZE = 100
-SPRITE_SIZE = 30
 
 WAITING_TIME = 5000    #オブジェクトが出現するまでの時間
 GAME_DURATION = WAITING_TIME + 60000    #ゲームの継続時間(ms)
 
-N_FOOD = int(GAME_DURATION/1000/2)   #リンゴの数
-N_ENEMY = int(GAME_DURATION/1000/4)   #敵の数
+N_FOOD = int(GAME_DURATION/1000/2)   #加点オブジェクトの総数
+N_ENEMY = int(GAME_DURATION/1000/4)   #減点オブジェクトの総数
 
 spriteduration_min = 10000   
 spriteduration_max = 20000
